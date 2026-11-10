@@ -1,0 +1,74 @@
+const baasApi = require('../services/baasApiService');
+const pool = require('../config/database');
+
+async function handleTransfer(req, res) {
+    const { amount, receiverAccount, receiverBank } = req.body;
+        
+            if (!amount || !receiverAccount || !receiverBank) {
+                    return res.status(400).json({ message: "Please provide amount, account number, and bank." });
+                        }
+
+                            const efikpayFee = 20; 
+                                const baasFee = 15;    
+                                    const totalDeduction = Number(amount) + efikpayFee + baasFee;
+                                        const transactionReference = `EFIK-TX-${Date.now()}`;
+
+                                            const client = await pool.connect();
+
+                                                try {
+                                                        await client.query('BEGIN');
+
+                                                                // 1. Check Balance in Database
+                                                                        const walletResult = await client.query('SELECT balance FROM wallets WHERE user_id = 1');
+                                                                                const currentBalance = parseFloat(walletResult.rows[0].balance);
+
+                                                                                        if (currentBalance < totalDeduction) {
+                                                                                                    await client.query('ROLLBACK');
+                                                                                                                return res.status(400).json({ message: "Insufficient funds in database." });
+                                                                                                                        }
+
+                                                                                                                                // 2. Call REAL Flutterwave API
+                                                                                                                                        const apiResponse = await baasApi.sendMoneyToBank(
+                                                                                                                                                    Number(amount), 
+                                                                                                                                                                receiverBank, 
+                                                                                                                                                                            receiverAccount, 
+                                                                                                                                                                                        transactionReference
+                                                                                                                                                                                                );
+
+                                                                                                                                                                                                        // 3. If Flutterwave fails, stop and ROLLBACK (don't deduct money)
+                                                                                                                                                                                                                if (apiResponse.status !== 'success') {
+                                                                                                                                                                                                                            await client.query('ROLLBACK');
+                                                                                                                                                                                                                                        return res.status(400).json({ message: `Flutterwave Error: ${apiResponse.message}` });
+                                                                                                                                                                                                                                                }
+
+                                                                                                                                                                                                                                                        // 4. Deduct Money & Save Receipt (Since Flutterwave succeeded)
+                                                                                                                                                                                                                                                                await client.query(
+                                                                                                                                                                                                                                                                            'UPDATE wallets SET balance = balance - $1 WHERE user_id = 1',
+                                                                                                                                                                                                                                                                                        [totalDeduction]
+                                                                                                                                                                                                                                                                                                );
+
+                                                                                                                                                                                                                                                                                                        await client.query(
+                                                                                                                                                                                                                                                                                                                    'INSERT INTO transactions (reference, amount, fee, status) VALUES ($1, $2, $3, $4)',
+                                                                                                                                                                                                                                                                                                                                [transactionReference, amount, efikpayFee, 'success']
+                                                                                                                                                                                                                                                                                                                                        );
+
+                                                                                                                                                                                                                                                                                                                                                await client.query('COMMIT');
+
+                                                                                                                                                                                                                                                                                                                                                        return res.status(200).json({
+                                                                                                                                                                                                                                                                                                                                                                    message: "Transfer Successful!",
+                                                                                                                                                                                                                                                                                                                                                                                reference: transactionReference,
+                                                                                                                                                                                                                                                                                                                                                                                            amountSent: amount,
+                                                                                                                                                                                                                                                                                                                                                                                                        efikpayFeeEarned: efikpayFee,
+                                                                                                                                                                                                                                                                                                                                                                                                                    newBalance: currentBalance - totalDeduction
+                                                                                                                                                                                                                                                                                                                                                                                                                            });
+
+                                                                                                                                                                                                                                                                                                                                                                                                                                } catch (error) {
+                                                                                                                                                                                                                                                                                                                                                                                                                                        await client.query('ROLLBACK');
+                                                                                                                                                                                                                                                                                                                                                                                                                                                console.error("Transfer Error:", error);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                        return res.status(500).json({ message: "Internal Server Error" });
+                                                                                                                                                                                                                                                                                                                                                                                                                                                            } finally {
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                    client.release();
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                        }
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                        }
+
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                        module.exports = { handleTransfer };
