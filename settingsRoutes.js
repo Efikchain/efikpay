@@ -1,0 +1,1 @@
+const express=require('express'); const {requireAuth}=require('../middleware/auth'); const {get,update}=require('../controllers/settingsController'); const r=express.Router(); r.use(requireAuth); r.get('/',get); r.patch('/',update); module.exports=r;
