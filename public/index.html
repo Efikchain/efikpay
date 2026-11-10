@@ -11,7 +11,7 @@ body{background:#0f172a;color:#fff;min-height:100vh}
 .card{background:#1e293b;margin:14px 0;padding:18px;border-radius:16px}
 h1{font-size:28px;line-height:1.25;text-align:center;margin:10px 0}
 .sub{color:#cbd5e1;text-align:center;line-height:1.6;font-size:14px}
-input,select{width:100%;padding:13px;border-radius:10px;border:1px solid #334155;background:#0f172a;color:#fff;margin-top:10px;font-size:15px}
+input{width:100%;padding:13px;border-radius:10px;border:1px solid #334155;background:#0f172a;color:#fff;margin-top:10px;font-size:15px}
 .btn{width:100%;background:#22c55e;color:#000;padding:14px;border:none;border-radius:12px;font-weight:800;margin-top:12px;cursor:pointer;font-size:15px}
 .btn2{width:100%;background:#fff;color:#000;padding:14px;border:none;border-radius:12px;font-weight:800;margin-top:10px;cursor:pointer}
 .small{color:#94a3b8;font-size:12px;line-height:1.6;margin-top:10px}
@@ -33,8 +33,9 @@ input,select{width:100%;padding:13px;border-radius:10px;border:1px solid #334155
 <h3>Welcome Back</h3>
 <input id="loginEmail" placeholder="Email address" type="email">
 <input id="loginPass" placeholder="Password" type="password">
-<button class="btn" onclick="doLogin()">Login</button>
-<button class="btn2" onclick="show('registerCard')">Create Free Account</button>
+<button class="btn" type="button" onclick="doLogin()">Login</button>
+<button class="btn2" type="button" onclick="show('registerCard')">Create Free Account</button>
+<p class="small">Demo: After you create an account, use code <b>123456</b> to verify.</p>
 </div>
 
 <div class="card hidden" id="registerCard">
@@ -44,37 +45,36 @@ input,select{width:100%;padding:13px;border-radius:10px;border:1px solid #334155
 <input id="regPhone" placeholder="Phone Number">
 <input id="regPass" placeholder="Password - 8+ characters" type="password">
 <input id="regPin" placeholder="Create 4-digit PIN" maxlength="4" inputmode="numeric">
-<button class="btn" onclick="doRegister()">Create Account</button>
-<button class="btn2" onclick="show('loginCard')">Back to Login</button>
-<p class="small">By creating an account you agree to our Terms and Privacy Policy.</p>
+<button class="btn" type="button" onclick="doRegister()">Create Account</button>
+<button class="btn2" type="button" onclick="show('loginCard')">Back to Login</button>
 </div>
 
 <div class="card hidden" id="otpCard">
 <h3>Verify Your Account</h3>
-<p class="small">Enter the 6-digit code we sent you. It expires in 10 minutes.</p>
+<p class="small">Enter the 6-digit code. Demo code is <b>123456</b>. In live mode it will be sent to your email/phone.</p>
 <input id="otpCode" placeholder="Enter code" maxlength="6" inputmode="numeric">
-<button class="btn" onclick="doVerifyOtp()">Verify</button>
-<button class="btn2" onclick="doResendOtp()">Resend Code</button>
+<button class="btn" type="button" onclick="doVerifyOtp()">Verify</button>
+<button class="btn2" type="button" onclick="doResendOtp()">Resend Code</button>
 </div>
 
 <div class="card hidden" id="kycCard">
 <h3>Verify Your Identity</h3>
-<p class="small">Verification Status: <span class="kyc-badge" id="kycStatus">PENDING</span><br>Complete verification to unlock transfers. Your information is kept private and secure.</p>
-<input id="kycBvn" placeholder="Bank Verification Number - 11 digits" maxlength="11" inputmode="numeric">
-<input id="kycNin" placeholder="National ID Number - optional" maxlength="11" inputmode="numeric">
+<p class="small">Status: <span class="kyc-badge" id="kycStatus">PENDING</span><br>Complete verification to unlock transfers. Your information is kept private.</p>
+<input id="kycBvn" placeholder="Verification Number - 11 digits" maxlength="11" inputmode="numeric">
+<input id="kycNin" placeholder="National ID - optional" maxlength="11" inputmode="numeric">
 <input id="kycDob" type="date">
 <input id="kycAddress" placeholder="Home Address">
-<button class="btn" onclick="doKyc()">Submit for Verification</button>
-<button class="btn2" onclick="show('dashCard')">Skip for Now</button>
+<button class="btn" type="button" onclick="doKyc()">Submit for Verification</button>
+<button class="btn2" type="button" onclick="show('dashCard')">Skip for Now</button>
 </div>
 
 <div class="card hidden" id="dashCard">
 <h3>My Wallet <span id="dashKyc" class="kyc-badge">PENDING</span></h3>
 <p class="small" id="dashUser">Welcome</p>
 <h1 id="dashBalance">₦0.00</h1>
-<div class="row"><button class="btn" onclick="doFund()">Add Money</button><button class="btn2" onclick="show('transferCard')">Send Money</button></div>
-<div class="row"><button class="btn2" onclick="doBills()">Pay Bill</button><button class="btn2" onclick="doSavings()">Savings</button></div>
-<button class="btn2" onclick="doLogout()">Logout</button>
+<div class="row"><button class="btn" type="button" onclick="doFund()">Add Money</button><button class="btn2" type="button" onclick="show('transferCard')">Send Money</button></div>
+<div class="row"><button class="btn2" type="button" onclick="doBills()">Pay Bill</button><button class="btn2" type="button" onclick="doSavings()">Savings</button></div>
+<button class="btn2" type="button" onclick="doLogout()">Logout</button>
 <p class="small" id="dashTx">No transactions yet.</p>
 </div>
 
@@ -84,59 +84,88 @@ input,select{width:100%;padding:13px;border-radius:10px;border:1px solid #334155
 <input id="trTo" placeholder="Recipient">
 <input id="trAmount" placeholder="Amount" inputmode="numeric">
 <input id="trPin" placeholder="Enter 4-digit PIN" maxlength="4" inputmode="numeric">
-<button class="btn" onclick="doTransfer()">Send Securely</button>
-<button class="btn2" onclick="show('dashCard')">Back to Wallet</button>
+<button class="btn" type="button" onclick="doTransfer()">Send Securely</button>
+<button class="btn2" type="button" onclick="show('dashCard')">Back to Wallet</button>
 </div>
 
-<div class="card"><h3>Why EfikPay?</h3><p class="small">Transfers &nbsp;•&nbsp; Bills &nbsp;•&nbsp; Savings &nbsp;•&nbsp; Business Payments<br>Protected with verification, one-time code and PIN.</p></div>
+<div class="card"><h3>Why EfikPay?</h3><p class="small">Transfers • Bills • Savings • Business Payments<br>Protected with verification, one-time code and PIN.</p></div>
 <div class="small center">© 2026 EfikPay • efikpay.com • Never share your code, PIN or verification number with anyone.</div>
 </div>
 <script>
-const API = '';
-let token = localStorage.getItem('efikpay_token') || '';
-let pendingEmail = '';
+let user = JSON.parse(localStorage.getItem('efik_user')||'null');
+let balance = Number(localStorage.getItem('efik_balance')||'0');
+let txs = JSON.parse(localStorage.getItem('efik_txs')||'[]');
 function show(id){['loginCard','registerCard','otpCard','kycCard','dashCard','transferCard'].forEach(x=>document.getElementById(x).classList.add('hidden'));document.getElementById(id).classList.remove('hidden');}
-function err(m){let e=document.getElementById('msgErr');e.style.display='block';e.textContent=m;setTimeout(()=>e.style.display='none',5000)}
-function ok(m){let e=document.getElementById('msgOk');e.style.display='block';e.textContent=m;setTimeout(()=>e.style.display='none',5000)}
-async function api(path,body,needAuth){
-  let h={'Content-Type':'application/json'}; if(needAuth) h['Authorization']='Bearer '+token;
-  let r=await fetch(API+path,{method:'POST',headers:h,body:JSON.stringify(body||{})});
-  let d=await r.json().catch(()=>({})); if(!r.ok) throw new Error(d.message||('Request failed')); return d;
-}
-async function doRegister(){
+function err(m){let e=document.getElementById('msgErr');e.style.display='block';e.textContent=m;setTimeout(()=>e.style.display='none',6000)}
+function ok(m){let e=document.getElementById('msgOk');e.style.display='block';e.textContent=m;setTimeout(()=>e.style.display='none',6000)}
+function save(){localStorage.setItem('efik_user',JSON.stringify(user));localStorage.setItem('efik_balance',String(balance));localStorage.setItem('efik_txs',JSON.stringify(txs));}
+function doRegister(){
   let name=document.getElementById('regName').value.trim(), email=document.getElementById('regEmail').value.trim(), phone=document.getElementById('regPhone').value.trim(), pass=document.getElementById('regPass').value, pin=document.getElementById('regPin').value;
-  if(!name||!email||!phone) return err('Fill name, email and phone'); if(pass.length<8) return err('Password must be 8+ characters'); if(!/^\d{4}$/.test(pin)) return err('PIN must be exactly 4 digits');
-  try{ pendingEmail=email; await api('/api/auth/register',{fullName:name,email,phone,password:pass,transactionPin:pin}); ok('Account created. Code sent.'); show('otpCard'); }catch(e){ err(e.message); }
+  if(!name||!email||!phone) return err('Fill name, email and phone');
+  if(pass.length<8) return err('Password must be 8+ characters');
+  if(!/^\d{4}$/.test(pin)) return err('PIN must be exactly 4 digits');
+  user={name,email,phone,pass,pin,kyc:'PENDING',verified:false}; save();
+  ok('Account created for '+email+'. Your code is 123456 (demo)'); show('otpCard');
 }
-async function doVerifyOtp(){
-  let code=document.getElementById('otpCode').value.trim(); if(!/^\d{6}$/.test(code)) return err('Enter 6-digit code');
-  try{ let d=await api('/api/auth/verify-otp',{email:pendingEmail,otp:code}); if(d.token){token=d.token;localStorage.setItem('efikpay_token',token);} ok('Verified. Complete identity check.'); show('kycCard'); }catch(e){ err(e.message); }
+function doVerifyOtp(){
+  let code=document.getElementById('otpCode').value.trim();
+  if(code!=='123456') return err('Wrong code. Demo code is 123456');
+  if(!user) return err('Create account first');
+  user.verified=true; save(); ok('Verified. Now complete identity check.'); show('kycCard');
 }
-async function doResendOtp(){ try{ await api('/api/auth/resend-otp',{email:pendingEmail}); ok('Code resent'); }catch(e){ err(e.message); } }
-async function doLogin(){
+function doResendOtp(){ ok('Code resent. Demo code is 123456'); }
+function doLogin(){
   let email=document.getElementById('loginEmail').value.trim(), pass=document.getElementById('loginPass').value;
-  if(!email||!pass) return err('Enter email and password');
-  try{ let d=await api('/api/auth/login',{email,password:pass}); if(d.token){token=d.token;localStorage.setItem('efikpay_token',token);} if(d.needsOtp){pendingEmail=email; show('otpCard'); return ok('Code required - check your email');} if(d.needsKyc){show('kycCard'); return ok('Login ok - complete verification');} ok('Welcome back'); loadDash(); }catch(e){ err(e.message); }
+  if(!user || user.email!==email || user.pass!==pass) return err('No account found with that email/password. Create an account first.');
+  if(!user.verified){ show('otpCard'); return ok('Please verify with code 123456'); }
+  if(user.kyc!=='VERIFIED'){ show('kycCard'); return ok('Login ok - complete verification'); }
+  ok('Welcome back, '+user.name); loadDash();
 }
-async function doKyc(){
-  let bvn=document.getElementById('kycBvn').value.trim(), nin=document.getElementById('kycNin').value.trim(), dob=document.getElementById('kycDob').value, addr=document.getElementById('kycAddress').value.trim();
-  if(!/^\d{11}$/.test(bvn)) return err('Verification number must be exactly 11 digits'); if(!dob||!addr) return err('Enter date of birth and address');
-  try{ let d=await api('/api/kyc/submit',{bvn,nin,dob,address:addr},true); document.getElementById('kycStatus').textContent=(d.kycStatus||'PENDING').toUpperCase(); ok('Submitted. Status: '+(d.kycStatus||'pending')); show('dashCard'); loadDash(); }catch(e){ err(e.message); }
+function doKyc(){
+  let bvn=document.getElementById('kycBvn').value.trim(), dob=document.getElementById('kycDob').value, addr=document.getElementById('kycAddress').value.trim();
+  if(!/^\d{11}$/.test(bvn)) return err('Verification number must be exactly 11 digits');
+  if(!dob||!addr) return err('Enter date of birth and address');
+  if(!user) return err('Create account first');
+  user.kyc='VERIFIED'; user.bvnLast4=bvn.slice(-4); save();
+  document.getElementById('kycStatus').textContent='VERIFIED';
+  document.getElementById('dashKyc').textContent='VERIFIED';
+  ok('Verification approved. Transfers unlocked.'); loadDash();
 }
-async function loadDash(){
+function loadDash(){
   show('dashCard');
-  try{ let r=await fetch('/api/wallet/balance',{headers:{'Authorization':'Bearer '+token}}); let d=await r.json(); document.getElementById('dashBalance').textContent='₦'+Number(d.balance||0).toLocaleString('en-NG',{minimumFractionDigits:2}); }catch(e){ document.getElementById('dashBalance').textContent='₦0.00'; }
+  document.getElementById('dashUser').textContent='Welcome, '+(user?user.name:'');
+  document.getElementById('dashBalance').textContent='₦'+balance.toLocaleString('en-NG',{minimumFractionDigits:2});
+  document.getElementById('dashKyc').textContent=user?user.kyc:'PENDING';
+  document.getElementById('dashTx').innerHTML = txs.length? txs.slice(-3).reverse().map(t=>t+'<br>').join('') : 'No transactions yet.';
+  document.getElementById('transferWarn').textContent = user && user.kyc==='VERIFIED' ? 'Verified - you can send money.' : 'Verification required before sending.';
 }
-async function doFund(){ let a=prompt('Enter amount to add'); if(!a) return; try{ let d=await api('/api/wallet/fund',{amount:Number(a)},true); if(d.paymentLink) window.location.href=d.paymentLink; else ok('Request created'); }catch(e){ err(e.message); } }
-async function doTransfer(){
+function doFund(){
+  let a=Number(prompt('Enter amount to add e.g. 5000')); if(!a||a<=0) return;
+  balance+=a; txs.push('+' + '₦'+a.toLocaleString()+' - Added money'); save(); ok('₦'+a.toLocaleString()+' added to wallet'); loadDash();
+}
+function doTransfer(){
   let to=document.getElementById('trTo').value.trim(), amt=Number(document.getElementById('trAmount').value), pin=document.getElementById('trPin').value;
-  if(!to||!amt||amt<=0) return err('Enter recipient and valid amount'); if(!/^\d{4}$/.test(pin)) return err('Enter 4-digit PIN');
+  if(!user) return err('Login first');
+  if(user.kyc!=='VERIFIED') return err('Complete verification first');
+  if(!to||!amt||amt<=0) return err('Enter recipient and valid amount');
+  if(pin!==user.pin) return err('Wrong PIN');
+  if(amt>balance) return err('Insufficient balance. Add money first.');
   if(!confirm('Send ₦'+amt.toLocaleString()+' to '+to+' ?')) return;
-  try{ let d=await api('/api/transfers/send',{recipient:to,amount:amt,transactionPin:pin},true); ok('Transfer '+(d.status||'submitted')+' - Ref: '+(d.reference||'')); loadDash(); }catch(e){ err(e.message); }
+  balance-=amt; let ref='EFK'+Date.now().toString().slice(-8); txs.push('-₦'+amt.toLocaleString()+' to '+to+' Ref:'+ref); save(); ok('Sent! Ref: '+ref); loadDash();
 }
-function doBills(){ alert('Bills - choose airtime, data or electricity'); }
-function doSavings(){ alert('Savings - set your target and amount'); }
-function doLogout(){ token=''; localStorage.removeItem('efikpay_token'); show('loginCard'); ok('Logged out'); }
-fetch('/health').then(r=>r.json()).then(d=>{document.getElementById('health').textContent='● Connected'}).catch(()=>{document.getElementById('health').textContent='● Not connected';});
-if(token){ loadDash(); }
+function doBills(){
+  let b=prompt('What bill? Type: Airtime, Data, Electricity'); if(!b) return;
+  let a=Number(prompt('Amount for '+b)); if(!a||a<=0) return;
+  if(a>balance) return err('Insufficient balance');
+  balance-=a; txs.push('-₦'+a.toLocaleString()+' Bill: '+b); save(); ok(b+' paid ₦'+a.toLocaleString()); loadDash();
+}
+function doSavings(){
+  let a=Number(prompt('How much to save?')); if(!a||a<=0) return;
+  if(a>balance) return err('Insufficient balance');
+  balance-=a; txs.push('-₦'+a.toLocaleString()+' Saved'); save(); ok('₦'+a.toLocaleString()+' moved to savings'); loadDash();
+}
+function doLogout(){ show('loginCard'); ok('Logged out'); }
+// Health check - does not block buttons if server is off
+fetch('/health').then(r=>r.json()).then(d=>{document.getElementById('health').textContent='● Connected'}).catch(()=>{document.getElementById('health').textContent='● Demo Mode - Works without server';});
+if(user && user.verified && user.kyc==='VERIFIED'){ loadDash(); }
 </script></body></html>
