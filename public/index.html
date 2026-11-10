@@ -19,8 +19,8 @@ try{ user=JSON.parse(localStorage.getItem('efik_user')||'null'); }catch(e){ user
 try{ balance=Number(localStorage.getItem('efik_balance')||0)||0; }catch(e){ balance=0; }
 try{ txs=JSON.parse(localStorage.getItem('efik_txs')||'[]'); }catch(e){ txs=[]; }
 function showCard(id){ var ids=['loginCard','registerCard','otpCard','kycCard','dashCard','transferCard']; for(var i=0;i<ids.length;i++){ document.getElementById(ids[i]).style.display='none'; } document.getElementById(id).style.display='block'; window.scrollTo(0,0); }
-function err(m){ var e=document.getElementById('msgErr'); e.style.display='block'; e.textContent=m; }
-function ok(m){ var e=document.getElementById('msgOk'); e.style.display='block'; e.textContent=m; }
+function err(m){ var e=document.getElementById('msgErr'); e.style.display='block'; e.textContent=m; setTimeout(function(){e.style.display='none'},4000); }
+function ok(m){ var e=document.getElementById('msgOk'); e.style.display='block'; e.textContent=m; setTimeout(function(){e.style.display='none'},4000); }
 function save(){ try{ localStorage.setItem('efik_user', JSON.stringify(user)); localStorage.setItem('efik_balance', String(balance)); localStorage.setItem('efik_txs', JSON.stringify(txs)); }catch(e){} }
 function doRegister(){ var n=document.getElementById('regName').value.trim(), em=document.getElementById('regEmail').value.trim(), ph=document.getElementById('regPhone').value.trim(), pw=document.getElementById('regPass').value, pin=document.getElementById('regPin').value; if(!n||!em||!ph) return err('Fill name, email, phone'); if(pw.length<8) return err('Password 8+ chars'); if(!/^\d{4}$/.test(pin)) return err('PIN must be 4 digits'); user={name:n,email:em,phone:ph,pass:pw,pin:pin,kyc:'PENDING',verified:false}; save(); ok('Account created. Code is 123456'); showCard('otpCard'); }
 function doOtp(){ var c=document.getElementById('otpCode').value.trim(); if(c!=='123456') return err('Wrong code. Use 123456'); if(!user) return err('Create account first'); user.verified=true; save(); ok('Verified'); showCard('kycCard'); }
