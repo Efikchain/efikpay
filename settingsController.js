@@ -1,4 +1,0 @@
-const pool=require('../config/db');
-async function get(req,res){const r=await pool.query(`SELECT security_2fa,transaction_alerts,login_alerts,hide_balance,theme,currency FROM user_settings WHERE user_id=$1`,[req.user.sub]); res.json({success:true,settings:r.rows[0]});}
-async function update(req,res){const fields=['security_2fa','transaction_alerts','login_alerts','hide_balance','theme','currency']; const values=[]; const sets=[]; for(const f of fields){if(req.body[f]!==undefined){sets.push(`${f}=$${values.length+1}`);values.push(req.body[f]);}} if(!sets.length)return res.status(400).json({success:false,message:'No settings supplied'}); values.push(req.user.sub); const r=await pool.query(`UPDATE user_settings SET ${sets.join(',')},updated_at=NOW() WHERE user_id=$${values.length} RETURNING *`,values); res.json({success:true,settings:r.rows[0]});}
-module.exports={get,update};
