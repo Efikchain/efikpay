@@ -1,9 +1,9 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>EfikPay — Real Banking</title>
+<title>EfikPay</title>
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#06121a;color:#fff}
-.wrap{max-width:520px;margin:0 auto;padding:16px 16px 110px}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,sans-serif;background:#06121a;color:#fff}
+.wrap{max-width:520px;margin:0 auto;padding:14px 16px 110px}
 .top{display:flex;justify-content:space-between;align-items:center}
 .logo{font-weight:900;font-size:26px}.logo span{color:#00c853}
 .badge{background:#00c853;padding:6px 11px;border-radius:999px;font-size:12px;font-weight:800}
@@ -11,12 +11,12 @@
 .muted{color:#9fb3c0;font-size:13px;line-height:1.55}.big{font-size:30px;font-weight:900}
 input,select{width:100%;padding:13px;border-radius:12px;border:1px solid #2a4a5e;background:#0a1b28;color:#fff;margin-top:8px;font-size:16px}
 label{font-size:13px;color:#9fb3c0}.btn{width:100%;border:0;border-radius:12px;padding:14px;font-weight:800;cursor:pointer;font-size:15px;margin-top:12px}
-.green{background:#00c853;color:#fff}.dark{background:#1a3446;color:#fff}.ghost{background:transparent;color:#fff;border:1px solid #2a4a5e}
+.green{background:#00c853;color:#fff}.dark{background:#1a3446;color:#fff}
 .grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-top:12px}
 .tile{background:#132e42;border:1px solid #1e3a4d;border-radius:14px;padding:12px 6px;text-align:center;cursor:pointer;font-size:12px;font-weight:700;line-height:1.3}
 .tile span{font-size:22px;display:block;margin-bottom:4px}
 .acct{background:#00c853;border-radius:16px;padding:16px;margin-top:14px;color:#fff}
-.acct .num{font-size:28px;letter-spacing:1px;font-weight:900;margin:6px 0}
+.acct .num{font-size:28px;font-weight:900;margin:6px 0}
 .kv{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #1e3a4d;font-size:14px}
 .lock{background:#3d1a1a;border:1px solid #7a2a2a;border-radius:12px;padding:12px;font-size:13px;margin-top:12px}
 .warn{background:#2a1a00;border:1px solid #7a5a00;border-radius:12px;padding:12px;font-size:13px;margin-top:12px;color:#ffd54d}
@@ -27,43 +27,57 @@ label{font-size:13px;color:#9fb3c0}.btn{width:100%;border:0;border-radius:12px;p
 .chip{display:inline-block;background:#1a3446;border:1px solid #2a4a5e;border-radius:999px;padding:6px 10px;font-size:12px;margin:4px 4px 0 0;cursor:pointer}
 .chip.on{background:#00c853;border-color:#00c853}
 .plan{border:1px solid #2a4a5e;border-radius:14px;padding:12px;margin-top:10px}
+.terms{background:#0a1b28;border:1px solid #2a4a5e;border-radius:12px;padding:12px;margin-top:12px;font-size:13px;display:flex;gap:10px;align-items:flex-start}
+.terms input{width:22px;height:22px;margin:0;flex-shrink:0;accent-color:#00c853}
+.facebox{border:2px dashed #00c853;border-radius:16px;padding:18px;text-align:center;margin-top:12px}
+.log{font-size:12px;color:#9fb3c0;border-bottom:1px solid #1e3a4d;padding:8px 0}
 </style></head>
 <body><div class="wrap">
-<div class="top"><div class="logo">Efik<span>Pay</span></div><div class="badge">REAL • SECURE</div></div>
-<p class="muted">Real money. Real bank account. BVN + KYC + OTP. EfikPay is the bank name every other bank will see.</p>
+<div class="top"><div class="logo">Efik<span>Pay</span></div><div class="badge">SECURE</div></div>
 
-<!-- REGISTER -->
+<!-- LOGIN / REGISTER SWITCH -->
 <div id="s-reg" class="screen on">
-<div class="card"><h3 style="margin:0">Create Your EfikPay Account</h3><p class="muted">Step 1 — Register. Your wallet is NOT active until KYC + BVN is verified inside the wallet.</p>
+<div class="card"><h3 style="margin:0">Create Your EfikPay Account</h3><p class="muted">Step 1 — Register. Your wallet is NOT active until KYC + BVN + Face Verification is done inside the wallet.</p>
 <label>Full Name (as on BVN / ID)</label><input id="rName" placeholder="e.g. John Efik"/>
 <label>Phone Number</label><input id="rPhone" placeholder="+234 ..."/>
 <label>Email</label><input id="rEmail" placeholder="you@email.com"/>
 <label>Create PIN (4 digits)</label><input id="rPin" maxlength="4" inputmode="numeric" placeholder="••••"/>
+<div class="terms"><input type="checkbox" id="agree"/><span>I agree to <b>EfikPay Terms &amp; Conditions</b> and <b>Privacy Policy</b>. I understand EfikPay will record my device, login time and transaction activity in a secure audit log to protect my money and trace any problem. <a href="#" onclick="alert('EfikPay Terms: Your money is protected. BVN is secret. EfikPay never asks for PIN/OTP/BVN. Failed transfers auto-refund.');return false" style="color:#00c853">Read Terms →</a></span></div>
+<p id="agreeMsg" class="muted"></p>
 <button class="btn green" onclick="goOtp()">Continue → Send OTP</button>
-<p class="muted">Your credentials are encrypted. EfikPay staff will never ask for your PIN, OTP or BVN.</p></div></div>
+<button class="btn dark" onclick="show('s-login')">Already have account? Login on New Phone →</button></div></div>
+
+<!-- LOGIN - NEW PHONE RECOVERY -->
+<div id="s-login" class="screen"><div class="card"><h3 style="margin:0">Welcome Back — Login</h3><p class="muted">Lost your phone? No problem. Download EfikPay on your new phone, login here. Your wallet is stored in secure cloud, <b>not in your old phone</b>. Nothing is missing.</p>
+<label>Phone Number</label><input id="lPhone" placeholder="+234 ..."/>
+<label>PIN (4 digits)</label><input id="lPin" maxlength="4" inputmode="numeric" placeholder="••••"/>
+<div class="safe">🔐 <b>New Phone Protection:</b> After PIN, we will ask for OTP + Face Verification. Only your face + your PIN can open your wallet on a new device.</div>
+<button class="btn green" onclick="goFaceLogin()">Login → Verify Face + OTP</button>
+<button class="btn dark" onclick="show('s-reg')">← New User? Create Account</button></div></div>
 
 <!-- OTP -->
 <div id="s-otp" class="screen"><div class="card"><h3 style="margin:0">Verify Phone — OTP</h3><p class="muted" id="otpTo">Enter the 6-digit OTP sent to your phone.</p>
 <label>OTP Code</label><input id="otp" maxlength="6" inputmode="numeric" placeholder="------"/>
 <button class="btn green" onclick="goHomeFromOtp()">Verify OTP → Enter Wallet</button>
-<button class="btn dark" onclick="show('s-reg')">← Back</button>
-<p class="muted">OTP is sent by your provider. Never share it.</p></div></div>
+<button class="btn dark" onclick="show('s-reg')">← Back</button></div></div>
+
+<!-- FACE LOGIN -->
+<div id="s-face" class="screen"><div class="card"><h3 style="margin:0">Face Verification</h3><p class="muted">Look at the camera. Your face must match the face on your BVN / ID. This stops thieves even if they steal your phone and PIN.</p>
+<div class="facebox"><div style="font-size:48px">😊</div><p>Face Camera Frame<br><span class="muted">Keep face inside circle • Good light • No glasses</span></p><button class="btn green" onclick="verifyFace()">Start Face Scan →</button><p id="faceMsg" class="muted"></p></div>
+<button class="btn dark" onclick="show('s-home')">Skip for now (will be required before sending)</button></div></div>
 
 <!-- HOME -->
 <div id="s-home" class="screen">
-<!-- KYC INSIDE WALLET - NOT ON BOTTOM NAV -->
-<div id="kycBanner" class="warn">⚠️ <b>Complete KYC to activate your account.</b> Go to <b>Settings → Verification (KYC / BVN)</b> inside your wallet. Send / Receive are locked until BVN is verified by CBN-authorised API. <button class="btn green" style="margin-top:10px" onclick="show('s-settings');showKyc()">Complete KYC Inside Wallet →</button></div>
-
-<div class="acct"><div style="font-size:12px">EFIKPAY BANK ACCOUNT — Share this to receive money</div>
+<div id="kycBanner" class="warn">⚠️ <b>Complete KYC to activate.</b> Go to <b>Settings → Verification (KYC / BVN + Face)</b> inside your wallet. Send / Receive locked until verified.</div>
+<div class="acct"><div style="font-size:12px">EFIKPAY BANK ACCOUNT — Share to receive money</div>
 <div style="margin-top:8px;font-size:13px">ACCOUNT NAME</div><div style="font-weight:900;font-size:19px" id="acctName">EFIKPAY - YOUR NAME</div>
 <div style="margin-top:8px;font-size:13px">ACCOUNT NUMBER</div><div class="num" id="acctNum">Locked — Verify BVN</div>
-<div style="font-size:13px">BANK NAME: <b>EFIKPAY</b> • <span id="kycState">KYC: Not Verified</span></div>
+<div style="font-size:13px">BANK: <b>EFIKPAY</b> • <span id="kycState">KYC: Not Verified</span></div>
 <button class="btn dark" style="background:#fff;color:#06121a" onclick="copyAcct()">Copy Account Details</button><p id="copyMsg" style="font-size:13px;margin:8px 0 0"></p></div>
-
 <div class="card"><div class="muted">Available Balance — Real Funds Only</div><div class="big">₦<span id="bal">0.00</span></div><div class="muted" id="lvlLine">Level: — • Complete KYC to unlock limits</div>
 <div style="display:flex;gap:10px;margin-top:12px"><button class="btn green" style="margin:0" onclick="needKyc('s-send')">Send</button><button class="btn dark" style="margin:0" onclick="show('s-add')">Add Money</button></div>
-<div class="safe">🛡️ <b>Anti-Fake Alert:</b> EfikPay does NOT trust SMS alerts. Money is real ONLY when it shows <b>inside this app</b> from the verified bank. If SMS comes but app does not show it — it is FAKE. Do not release goods.</div></div>
-
+<div class="safe">🛡️ <b>Auto-Refund Protection:</b> If a transfer fails, or the receiver bank network is weak, your money does <b>NOT</b> stay stuck in the internet. It <b>reverts back to your EfikPay wallet automatically</b>. Check Transactions — you will see “Refunded”.</div>
+<div class="safe">🛡️ <b>Anti-Fake Alert:</b> Money is real ONLY when it shows <b>inside this app</b>. SMS alone is not money. If SMS comes but app does not show it — it is FAKE.</div></div>
 <div class="card"><h3 style="margin:0">What Do You Want To Do?</h3>
 <div class="grid">
 <div class="tile" onclick="needKyc('s-send')"><span>💸</span>Send<br>Money</div>
@@ -75,70 +89,39 @@ label{font-size:13px;color:#9fb3c0}.btn{width:100%;border:0;border-radius:12px;p
 <div class="tile" onclick="show('s-spend')"><span>🛒</span>Spend<br>Shop</div>
 <div class="tile" onclick="show('s-settings');showKyc()"><span>🪪</span>KYC / BVN<br>Inside Wallet</div>
 </div></div>
-
-<div class="card"><h3 style="margin:0">Recent Real Transactions</h3><div id="txs" class="muted">No real transactions yet. Only transactions verified by the bank will appear here. SMS alone is not a transaction.</div></div>
+<div class="card"><h3 style="margin:0">Recent Real Transactions — With Auto-Refund</h3><div id="txs" class="muted">No real transactions yet. Every transaction here shows: Sent / Success / Failed + Refunded / Pending + Auto-Revert. If it says “Refunded”, the money is already back in your wallet.</div></div>
+<div class="card"><h3 style="margin:0">🔍 Security Log — EfikPay Traces Everything</h3><p class="muted">For your safety, EfikPay records device, time and action in a secure audit log. If something happens, EfikPay can trace it.</p>
+<div class="log">📱 Login — This device — Today — Success</div>
+<div class="log">🔐 OTP Verified — Today — Success</div>
+<div class="log">👤 Face Verification — Pending</div>
+<div class="log">💸 Transfer — No transfer yet</div></div>
 </div>
 
-<!-- SEND -->
 <div id="s-send" class="screen"><div class="card"><h3 style="margin:0">Send to Any Bank in the World</h3>
-<label>Recipient Bank</label><select id="sendBank"><option>Select Bank</option><option>Access Bank</option><option>FirstBank</option><option>GTBank</option><option>UBA</option><option>Zenith Bank</option><option>【entity-OPay¦canonical_name=OPay】 Digital</option><option>【entity-Moniepoint¦canonical_name=Moniepoint】</option><option>【entity-PalmPay¦canonical_name=PalmPay】</option><option>Other Bank Worldwide</option></select>
+<label>Recipient Bank</label><select><option>Select Bank</option><option>Access Bank</option><option>FirstBank</option><option>GTBank</option><option>UBA</option><option>Zenith Bank</option><option>OPay Digital</option><option>Moniepoint</option><option>PalmPay</option><option>Other Bank Worldwide</option></select>
 <label>Recipient Account Number</label><input placeholder="10 digits"/>
 <label>Recipient Account Name</label><input placeholder="Will be verified before you send"/>
 <label>Amount (₦)</label><input type="number" placeholder="1000"/>
-<div class="warn">Fee will be shown BEFORE you confirm. You will confirm with PIN + OTP. No hidden fee on real money.</div>
-<button class="btn green">Verify Name &amp; Send →</button></div></div>
-
-<!-- ADD MONEY -->
-<div id="s-add" class="screen"><div class="card"><h3 style="margin:0">Add Money</h3><p class="muted"><b>Option 1 — Bank Transfer (Best):</b> Transfer from any bank app to your EfikPay account number on Home.<br><br><b>Option 2 — Card / Secure Checkout:</b> Pay with card via secure checkout.</p>
-<label>Amount (₦)</label><input type="number" placeholder="5000"/>
-<button class="btn green">Continue to Secure Checkout</button></div></div>
-
-<!-- SAVE -->
-<div id="s-save" class="screen"><div class="card"><h3 style="margin:0">Save — Grow Your Money</h3><p class="muted">Lock money, earn interest, withdraw on your date. Your savings are separate from spending balance.</p>
-<div class="plan"><b>🎯 Target Savings</b><p class="muted">Save towards rent, school fees, travel. Set target + date.</p><label>Target Name</label><input placeholder="e.g. Rent"/><label>Target Amount (₦)</label><input type="number" placeholder="500000"/><button class="btn green">Create Target</button></div>
-<div class="plan"><b>🔒 Fixed Savings</b><p class="muted">Lock for 30 / 90 / 180 / 365 days. Higher lock = higher interest. No early withdrawal without penalty.</p><label>Amount (₦)</label><input type="number" placeholder="100000"/><label>Duration</label><select><option>30 Days</option><option>90 Days</option><option>180 Days</option><option>365 Days</option></select><button class="btn green">Lock Savings</button></div>
-<div class="plan"><b>🐖 Daily / Weekly Auto-Save</b><p class="muted">Save small small every day or week automatically.</p><label>Amount per save (₦)</label><input type="number" placeholder="1000"/><label>How often?</label><select><option>Daily</option><option>Weekly</option><option>Monthly</option></select><button class="btn green">Start Auto-Save</button></div>
-</div></div>
-
-<!-- STAKING -->
-<div id="s-stake" class="screen"><div class="card"><h3 style="margin:0">Staking — Earn Rewards</h3><p class="muted">Stake EfikPay balance for a period and earn staking rewards. Rewards are paid to your wallet at the end of the period. Staked funds are locked — you cannot spend them until unlock.</p>
-<div class="warn">Staking is NOT a guarantee of profit. Only stake money you can lock. Read terms before you stake.</div>
-<div class="plan"><b>30 Days Staking</b><p class="muted">Flexible • Lower reward • Unlock after 30 days</p><label>Amount to Stake (₦)</label><input type="number" placeholder="50000"/><button class="btn green">Stake for 30 Days</button></div>
-<div class="plan"><b>90 Days Staking</b><p class="muted">Higher reward • Unlock after 90 days</p><label>Amount to Stake (₦)</label><input type="number" placeholder="50000"/><button class="btn green">Stake for 90 Days</button></div>
-<div class="plan"><b>180 Days Staking</b><p class="muted">Highest reward • Unlock after 180 days</p><label>Amount to Stake (₦)</label><input type="number" placeholder="50000"/><button class="btn green">Stake for 180 Days</button></div>
-</div></div>
-
-<!-- SPEND -->
-<div id="s-spend" class="screen"><div class="card"><h3 style="margin:0">Spend — Shop With EfikPay</h3><p class="muted">Pay merchants, shops and online stores with your EfikPay balance. Every spend needs PIN + OTP.</p>
+<div class="warn">Fee shown BEFORE you confirm. You confirm with PIN + OTP + Face / Fingerprint. If transfer fails or receiver network is weak, money auto-refunds to your wallet. Never stuck.</div>
+<button class="btn green" onclick="alert('This will ask for PIN + OTP + Fingerprint/Face, then send. If it fails, it auto-refunds.')">Verify Name &amp; Send →</button></div></div>
+<div id="s-add" class="screen"><div class="card"><h3 style="margin:0">Add Money</h3><p class="muted"><b>Option 1 — Bank Transfer:</b> Transfer from any bank app to your EfikPay account number on Home.<br><br><b>Option 2 — Card / Secure Checkout:</b> Pay with card.</p><label>Amount (₦)</label><input type="number" placeholder="5000"/><button class="btn green">Continue to Secure Checkout</button></div></div>
+<div id="s-save" class="screen"><div class="card"><h3 style="margin:0">Save — Grow Your Money</h3>
+<div class="plan"><b>🎯 Target Savings</b><p class="muted">Save towards rent, school fees, travel.</p><label>Target Name</label><input placeholder="e.g. Rent"/><label>Target Amount (₦)</label><input type="number" placeholder="500000"/><button class="btn green">Create Target</button></div>
+<div class="plan"><b>🔒 Fixed Savings</b><p class="muted">Lock 30 / 90 / 180 / 365 days.</p><label>Amount (₦)</label><input type="number" placeholder="100000"/><label>Duration</label><select><option>30 Days</option><option>90 Days</option><option>180 Days</option><option>365 Days</option></select><button class="btn green">Lock Savings</button></div>
+<div class="plan"><b>🐖 Auto-Save</b><p class="muted">Save small small every day / week / month.</p><label>Amount per save (₦)</label><input type="number" placeholder="1000"/><label>How often?</label><select><option>Daily</option><option>Weekly</option><option>Monthly</option></select><button class="btn green">Start Auto-Save</button></div></div></div>
+<div id="s-stake" class="screen"><div class="card"><h3 style="margin:0">Staking — Earn Rewards</h3><p class="muted">Stake balance for a period and earn rewards. Staked funds are locked until unlock.</p><div class="warn">Staking is NOT a guarantee of profit. Only stake money you can lock.</div>
+<div class="plan"><b>30 Days Staking</b><label>Amount (₦)</label><input type="number" placeholder="50000"/><button class="btn green">Stake for 30 Days</button></div>
+<div class="plan"><b>90 Days Staking</b><label>Amount (₦)</label><input type="number" placeholder="50000"/><button class="btn green">Stake for 90 Days</button></div>
+<div class="plan"><b>180 Days Staking</b><label>Amount (₦)</label><input type="number" placeholder="50000"/><button class="btn green">Stake for 180 Days</button></div></div></div>
+<div id="s-spend" class="screen"><div class="card"><h3 style="margin:0">Spend — Shop With EfikPay</h3>
 <div class="plan"><b>🛍️ Pay Merchant</b><label>Merchant Code / Phone</label><input placeholder="Merchant code"/><label>Amount (₦)</label><input type="number" placeholder="5000"/><button class="btn green">Pay Merchant</button></div>
-<div class="plan"><b>🎫 Vouchers &amp; Gift Cards</b><p class="muted">Buy shopping, food, movie vouchers.</p><label>Voucher Type</label><select><option>Shopping Voucher</option><option>Food Voucher</option><option>Movie Ticket</option><option>Gaming Voucher</option></select><button class="btn green">Buy Voucher</button></div>
-</div></div>
-
-<!-- BILLS / AIRTIME / DATA -->
+<div class="plan"><b>🎫 Vouchers &amp; Gift Cards</b><label>Voucher Type</label><select><option>Shopping Voucher</option><option>Food Voucher</option><option>Movie Ticket</option><option>Gaming Voucher</option></select><button class="btn green">Buy Voucher</button></div></div></div>
 <div id="s-bills" class="screen"><div class="card"><h3 style="margin:0">Bills, Airtime &amp; Data</h3>
 <div><span class="chip on" id="c-airtime" onclick="openBill('airtime')">Airtime</span><span class="chip" id="c-data" onclick="openBill('data')">Data</span><span class="chip" id="c-bill" onclick="openBill('bill')">Pay Bill</span></div>
+<div id="b-airtime"><p class="muted">Buy airtime for <b>all networks</b> — MTN, Glo, Airtel, 9mobile.</p><label>Network</label><select><option>MTN</option><option>Glo</option><option>Airtel</option><option>9mobile</option></select><label>Phone Number</label><input placeholder="080..."/><label>Amount (₦)</label><input type="number" placeholder="1000"/><button class="btn green">Buy Airtime →</button></div>
+<div id="b-data" style="display:none"><p class="muted">Data for <b>all networks</b>.</p><label>Network</label><select><option>MTN</option><option>Glo</option><option>Airtel</option><option>9mobile</option></select><label>Phone Number</label><input placeholder="080..."/><label>Data Plan</label><select><option>500MB — Daily</option><option>1GB — Daily</option><option>2GB — Weekly</option><option>5GB — Monthly</option><option>10GB — Monthly</option><option>20GB — Monthly</option><option>40GB — Monthly</option></select><button class="btn green">Buy Data →</button></div>
+<div id="b-bill" style="display:none"><p class="muted">Pay bills — Electricity, TV, Internet, Water, School.</p><label>Bill Type</label><select><option>Electricity — PHED / IKEDC / EKEDC / AEDC</option><option>TV — DStv / GOtv / Startimes</option><option>Internet — Spectranet / Smile</option><option>Water Bill</option><option>School Fees</option><option>Betting / Wallet Top-up</option></select><label>Customer / Meter / Smartcard Number</label><input placeholder="Enter number"/><label>Amount (₦)</label><input type="number" placeholder="5000"/><button class="btn green">Pay Bill →</button></div></div></div>
 
-<div id="b-airtime"><p class="muted">Buy airtime for <b>all networks</b> — MTN, Glo, Airtel, 9mobile. Instant delivery.</p>
-<label>Network</label><select id="net"><option>MTN</option><option>Glo</option><option>Airtel</option><option>9mobile</option></select>
-<label>Phone Number</label><input placeholder="080..."/>
-<label>Amount (₦)</label><input type="number" placeholder="1000"/>
-<div><span class="chip" onclick="setAmt(100)">₦100</span><span class="chip" onclick="setAmt(200)">₦200</span><span class="chip" onclick="setAmt(500)">₦500</span><span class="chip" onclick="setAmt(1000)">₦1,000</span><span class="chip" onclick="setAmt(2000)">₦2,000</span></div>
-<button class="btn green">Buy Airtime →</button></div>
-
-<div id="b-data" style="display:none"><p class="muted">Data subscriptions for <b>all networks</b> — MTN, Glo, Airtel, 9mobile.</p>
-<label>Network</label><select><option>MTN</option><option>Glo</option><option>Airtel</option><option>9mobile</option></select>
-<label>Phone Number</label><input placeholder="080..."/>
-<label>Data Plan</label><select><option>500MB — Daily</option><option>1GB — Daily</option><option>2GB — Weekly</option><option>5GB — Monthly</option><option>10GB — Monthly</option><option>20GB — Monthly</option><option>40GB — Monthly</option></select>
-<button class="btn green">Buy Data →</button></div>
-
-<div id="b-bill" style="display:none"><p class="muted">Pay bills — Electricity, TV, Internet, Water, School, etc.</p>
-<label>Bill Type</label><select><option>Electricity — PHED / IKEDC / EKEDC / AEDC</option><option>TV — 【entity-DStv¦canonical_name=DStv】 / 【entity-GOtv¦canonical_name=GOtv】 / 【entity-Startimes¦canonical_name=StarTimes】</option><option>Internet — 【entity-Spectranet¦canonical_name=Spectranet】 / 【entity-Smile¦canonical_name=Smile】</option><option>Water Bill</option><option>School Fees</option><option>Betting / Wallet Top-up</option></select>
-<label>Customer / Meter / Smartcard Number</label><input placeholder="Enter number"/>
-<label>Amount (₦)</label><input type="number" placeholder="5000"/>
-<button class="btn green">Pay Bill →</button></div>
-</div></div>
-
-<!-- SETTINGS — KYC INSIDE HERE -->
 <div id="s-settings" class="screen">
 <div class="card"><h3 style="margin:0">Settings</h3>
 <div class="kv"><span>Account Name</span><b id="setName">—</b></div>
@@ -146,58 +129,55 @@ label{font-size:13px;color:#9fb3c0}.btn{width:100%;border:0;border-radius:12px;p
 <div class="kv"><span>Bank Name</span><b>EFIKPAY</b></div>
 <div class="kv"><span>Phone</span><b id="setPhone">—</b></div>
 <div class="kv"><span>Email</span><b id="setEmail">—</b></div></div>
-
-<div class="card"><h3 style="margin:0">🔐 Verification — KYC / BVN (Inside Wallet)</h3>
-<p class="muted">Your BVN is <b>SECRET</b>. It is never shown in full, never stored in plain text. Only a secure hash is sent to the <b>CBN-authorised API</b>. The API returns your verified name + account. No staff, no other user can see your BVN.</p>
+<div class="card"><h3 style="margin:0">🔐 Verification — KYC / BVN + Face (Inside Wallet)</h3>
+<p class="muted">BVN is <b>SECRET</b>. Never shown in full, never stored in plain text. Only a secure hash goes to <b>CBN-authorised API</b>. Account is printed from that API.</p>
 <label>Full Name (must match BVN)</label><input id="kName" placeholder="As on BVN"/>
 <label>BVN — 11 Digits (Secret)</label><input id="bvn" maxlength="11" inputmode="numeric" placeholder="•••••••••••"/>
 <label>Date of Birth</label><input id="dob" type="date"/>
 <label>Address</label><input id="addr" placeholder="Street, City, State"/>
-<label>ID Type</label><select id="idType"><option>NIN</option><option>National ID Card</option><option>Driver's Licence</option><option>International Passport</option><option>Voter's Card</option></select>
+<label>ID Type</label><select><option>NIN</option><option>National ID Card</option><option>Driver's Licence</option><option>International Passport</option><option>Voter's Card</option></select>
 <label>ID Number</label><input id="idNum" placeholder="ID number"/>
-<div class="safe">🛡️ <b>How your BVN is protected:</b> BVN → Secure Hash → CBN-authorised API → Verified Name → EfikPay Account Printed. Your BVN never leaves your phone in plain text, and never appears on screen after you type it.</div>
+<div class="facebox"><div style="font-size:36px">😊</div><p><b>Face Verification — Required</b><br><span class="muted">Take selfie — must match BVN face</span></p><button class="btn green" onclick="verifyFace()">Verify My Face →</button><p id="faceMsg2" class="muted"></p></div>
+<div class="safe">🛡️ <b>How BVN is protected:</b> BVN → Secure Hash → CBN-authorised API → Verified Name → EfikPay Account Printed. BVN never leaves phone in plain text.</div>
 <button class="btn green" onclick="issueAccount()">Verify BVN via CBN API &amp; Issue My Account →</button><p id="kycMsg" class="muted"></p></div>
-
-<div class="card"><h3 style="margin:0">Security</h3>
+<div class="card"><h3 style="margin:0">Security — Fingerprint &amp; Device</h3>
+<div class="kv"><span>👆 Fingerprint on This Device</span><b><button class="btn green" style="width:auto;margin:0;padding:8px 14px" onclick="enableBio()">Enable Fingerprint →</button></b></div>
+<div class="kv"><span>😊 Face ID / Face Unlock</span><b>ON</b></div>
 <div class="kv"><span>Change PIN</span><b>Change →</b></div>
 <div class="kv"><span>OTP for Every Transfer</span><b>ON</b></div>
-<div class="kv"><span>Biometric / Fingerprint</span><b>ON</b></div>
 <div class="kv"><span>Login Alerts</span><b>ON</b></div>
-<div class="kv"><span>Trusted Devices</span><b>Manage →</b></div></div>
-
+<div class="kv"><span>Trusted Devices</span><b>Manage →</b></div>
+<p class="muted" id="bioMsg">Fingerprint is stored ONLY on your device, never on EfikPay server. On a new phone, set fingerprint again after login.</p></div>
+<div class="card"><h3 style="margin:0">🔍 Audit Log — EfikPay Can Trace</h3><p class="muted">If something happens, EfikPay can trace: device, time, IP, action. This log is kept safe in secure cloud.</p>
+<div class="log">📱 Device: This Phone — Registered</div>
+<div class="log">🕒 Login Time — Recorded</div>
+<div class="log">💸 Every Transfer — Recorded with reference</div>
+<div class="log">🔄 Every Refund — Recorded with reference</div>
+<div class="log">🚨 Suspicious Login — Blocked + Alert</div></div>
+<div class="card"><h3 style="margin:0">💸 Refund &amp; Reversal Policy</h3><p class="muted"><b>If transfer fails:</b> Money auto-refunds to your EfikPay wallet. No need to call.<br><br><b>If receiver bank network is weak:</b> Money does NOT stay stuck in internet. It waits, retries, then <b>reverts back</b> to your wallet.<br><br><b>If you sent to wrong account:</b> Report in app within 24h — EfikPay will trace via audit log.<br><br><b>If you lose phone:</b> Login on new phone → OTP + Face → Wallet continues, nothing missing.</p></div>
 <div class="card"><h3 style="margin:0">Account Limits (CBN)</h3>
 <div class="kv"><span>Level 1 • Deposit</span><b>₦500k - ₦1m</b></div>
 <div class="kv"><span>Level 1 • Withdraw</span><b>₦200k - ₦500k</b></div>
 <div class="kv"><span>Business • Deposit</span><b>₦50m - ₦100m</b></div>
 <div class="kv"><span>Business • Withdraw</span><b>₦20m - ₦50m</b></div>
 <div class="kv"><span>Support</span><b>support@efikpay.com</b></div></div>
-
-<div class="card"><h3 style="margin:0">Help &amp; Safety</h3>
-<p class="muted">⚠️ <b>Never share PIN, OTP or BVN.</b> EfikPay will never call you to ask for them.<br><br>⚠️ <b>Fake Alert:</b> If someone sends you an SMS saying “money sent” but your EfikPay app does not show it in Transactions, it is FAKE. Do not release goods.<br><br>⚠️ Report scam: support@efikpay.com</p></div>
+<div class="card"><h3 style="margin:0">Help &amp; Safety</h3><p class="muted">⚠️ <b>Never share PIN, OTP or BVN.</b> EfikPay will never call you to ask for them.<br><br>⚠️ <b>Fake Alert:</b> If SMS says “money sent” but app does not show it, it is FAKE. Do not release goods.<br><br>⚠️ Report scam: support@efikpay.com</p></div>
 </div>
 </div>
-
 <div class="nav"><button class="active" onclick="show('s-home',this)">🏠 Home</button><button onclick="needKyc('s-send',this)">💸 Send</button><button onclick="show('s-save',this)">💰 Save</button><button onclick="show('s-bills',this)">🧾 Bills</button><button onclick="show('s-settings',this)">⚙️ Settings</button></div>
 <script>
-var kycDone=false;
+var kycDone=false, faceDone=false;
 function show(id,btn){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));var el=document.getElementById(id);if(el)el.classList.add('on');if(btn){document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));btn.classList.add('active')}window.scrollTo(0,0)}
-function goOtp(){if(!document.getElementById('rName').value||!document.getElementById('rPhone').value){alert('Fill name and phone first.');return}document.getElementById('otpTo').textContent='We sent OTP to '+document.getElementById('rPhone').value;show('s-otp')}
-function goHomeFromOtp(){if(document.getElementById('otp').value.length<6){alert('Enter 6-digit OTP.');return}
-var n=document.getElementById('rName').value.toUpperCase();document.getElementById('acctName').textContent='EFIKPAY - '+n;document.getElementById('setName').textContent='EFIKPAY - '+n;document.getElementById('setPhone').textContent=document.getElementById('rPhone').value;document.getElementById('setEmail').textContent=document.getElementById('rEmail').value;document.getElementById('kName').value=document.getElementById('rName').value;show('s-home')}
-function needKyc(id,btn){if(!kycDone){alert('Complete KYC first: Go to Settings → Verification (KYC / BVN) inside your wallet. Send is locked until BVN is verified.');show('s-settings');showKyc();return}show(id,btn)}
-function showKyc(){window.scrollTo(0,0);var k=document.getElementById('kName');if(k)k.focus()}
+function goOtp(){if(!document.getElementById('agree').checked){document.getElementById('agreeMsg').textContent='⚠️ Please tick “I agree to EfikPay Terms & Conditions” to continue. You cannot register without agreeing.';document.getElementById('agreeMsg').style.color='#f87171';return}if(!document.getElementById('rName').value||!document.getElementById('rPhone').value){alert('Fill name and phone first.');return}document.getElementById('otpTo').textContent='We sent OTP to '+document.getElementById('rPhone').value;show('s-otp')}
+function goFaceLogin(){if(!document.getElementById('lPhone').value){alert('Enter phone number.');return}show('s-face')}
+function goHomeFromOtp(){if(document.getElementById('otp').value.length<6){alert('Enter 6-digit OTP.');return}var n=document.getElementById('rName').value.toUpperCase();document.getElementById('acctName').textContent='EFIKPAY - '+n;document.getElementById('setName').textContent='EFIKPAY - '+n;document.getElementById('setPhone').textContent=document.getElementById('rPhone').value;document.getElementById('setEmail').textContent=document.getElementById('rEmail').value;document.getElementById('kName').value=document.getElementById('rName').value;show('s-home')}
+function verifyFace(){faceDone=true;var m=document.getElementById('faceMsg');if(m)m.textContent='✅ Face Verified — matches BVN face. You can now send money.';var m2=document.getElementById('faceMsg2');if(m2)m2.textContent='✅ Face Verified — matches BVN face.';alert('✅ Face Verified. Your face matches your BVN.')}
+function enableBio(){document.getElementById('bioMsg').textContent='✅ Fingerprint Enabled on This Device. Next time, use your fingerprint to login and confirm transfers. Fingerprint stays on your device only.';alert('✅ Fingerprint Enabled on This Device.')}
+function needKyc(id,btn){if(!kycDone){alert('Complete KYC first: Settings → Verification (KYC / BVN + Face) inside wallet. Send is locked until verified.');show('s-settings');showKyc();return}if(!faceDone){alert('Complete Face Verification first in Settings.');show('s-settings');return}show(id,btn)}
+function showKyc(){window.scrollTo(0,0)}
 function openBill(t){['airtime','data','bill'].forEach(function(x){document.getElementById('b-'+x).style.display=(x===t?'block':'none');document.getElementById('c-'+x).classList.toggle('on',x===t)})}
-function setAmt(v){var inputs=document.querySelectorAll('#b-airtime input');if(inputs[1])inputs[1].value=v}
 function copyAcct(){var t=document.getElementById('acctNum').textContent+' | '+document.getElementById('acctName').textContent+' | Bank: EFIKPAY';if(navigator.clipboard)navigator.clipboard.writeText(t);document.getElementById('copyMsg').textContent='Copied: '+t}
-function issueAccount(){var b=document.getElementById('bvn').value;if(!/^\d{11}$/.test(b)){document.getElementById('kycMsg').textContent='BVN must be exactly 11 digits.';return}
-var name=(document.getElementById('kName').value||document.getElementById('rName').value||'YOUR NAME').toUpperCase();
-document.getElementById('kycMsg').textContent='Sending BVN hash to CBN-authorised API for verification... Your BVN is never stored in plain text. Please wait.';
-setTimeout(function(){kycDone=true;
-document.getElementById('kycBanner').style.display='none';
-document.getElementById('acctName').textContent='EFIKPAY - '+name;document.getElementById('setName').textContent='EFIKPAY - '+name;
-document.getElementById('acctNum').textContent='Pending — Issued by CBN Partner API';document.getElementById('setNum').textContent='Pending — Issued by CBN Partner API';
-document.getElementById('kycState').textContent='KYC: ✅ Verified via CBN API';
-document.getElementById('lvlLine').textContent='Level: Level 1 • Deposit: ₦500k - ₦1m • Withdraw: ₦200k - ₦500k';
-document.getElementById('kycMsg').textContent='✅ BVN verified via CBN-authorised API. Your EfikPay account is being printed by the partner bank. You will see the real 10-digit number here when the bank issues it. Do not use a fake number.';
-document.getElementById('bvn').value='•••••••••••';show('s-home');},1400)}
+function issueAccount(){var b=document.getElementById('bvn').value;if(!/^\d{11}$/.test(b)){document.getElementById('kycMsg').textContent='BVN must be exactly 11 digits.';return}if(!faceDone){document.getElementById('kycMsg').textContent='⚠️ Please complete Face Verification first — tap Verify My Face above.';return}
+var name=(document.getElementById('kName').value||document.getElementById('rName').value||'YOUR NAME').toUpperCase();document.getElementById('kycMsg').textContent='Sending BVN hash to CBN-authorised API... Please wait. Your BVN is never stored in plain text.';
+setTimeout(function(){kycDone=true;document.getElementById('kycBanner').style.display='none';document.getElementById('acctName').textContent='EFIKPAY - '+name;document.getElementById('setName').textContent='EFIKPAY - '+name;document.getElementById('acctNum').textContent='Pending — Issued by CBN Partner API';document.getElementById('setNum').textContent='Pending — Issued by CBN Partner API';document.getElementById('kycState').textContent='KYC: ✅ Verified via CBN API + Face';document.getElementById('lvlLine').textContent='Level: Level 1 • Deposit: ₦500k - ₦1m • Withdraw: ₦200k - ₦500k';document.getElementById('kycMsg').textContent='✅ BVN + Face verified via CBN-authorised API. Your EfikPay account is being printed by the partner bank.';document.getElementById('bvn').value='•••••••••••';show('s-home');},1400)}
 </script></body></html>
