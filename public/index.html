@@ -193,10 +193,8 @@ setTimeout(function(){kycDone=true;document.getElementById('kycBanner').style.di
 
 async function verifyOtp(){
   try{
-    var emailEl = document.getElementById('rEm');
     var codeEl = document.getElementById('otpInput');
-    var msgEl = document.getElementById('otpMsg');
-    var email = emailEl ? emailEl.value.trim() : '';
+    var email = getEfikEmail();
     var code = codeEl ? codeEl.value.trim() : '';
     if(!email){ if(msgEl) msgEl.textContent='Enter your email first.'; return; }
     if(!code || code.length!==6){ if(msgEl) msgEl.textContent='Enter the 6-digit code from Gmail.'; return; }
@@ -218,5 +216,20 @@ document.addEventListener('click', function(e){
   if(btn && btn.textContent && btn.textContent.indexOf('Send OTP')!==-1){
     setTimeout(function(){ var b=document.getElementById('otpBox'); if(b) b.style.display='block'; var m=document.getElementById('otpMsg'); if(m) m.textContent='Check Gmail for EfikPay code, type it above.'; var inp=document.getElementById('otpInput'); if(inp) inp.focus(); }, 1500);
   }
+});
+
+// Remember email for Verify - try all possible email input IDs
+function getEfikEmail(){
+  var ids = ['rEm','rEmail','email','regEmail','signupEmail','eEmail'];
+  for(var i=0;i<ids.length;i++){ var el=document.getElementById(ids[i]); if(el && el.value && el.value.trim()) return el.value.trim(); }
+  try{ var saved = localStorage.getItem('efikpay_email'); if(saved) return saved; }catch(e){}
+  // Fallback: find any input with @ in value
+  var inputs = document.querySelectorAll('input');
+  for(var j=0;j<inputs.length;j++){ var v=(inputs[j].value||'').trim(); if(v.indexOf('@')!==-1) return v; }
+  return '';
+}
+document.addEventListener('input', function(e){
+  var em = getEfikEmail();
+  if(em) { try{ localStorage.setItem('efikpay_email', em); }catch(_){} }
 });
 </script></body></html>
