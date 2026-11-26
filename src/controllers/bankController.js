@@ -75,7 +75,7 @@ async function createVirtualAccount(req,res){
     const d=(r.data&&r.data.data)||r.data;
     if(!d||!d.account_number) return res.status(400).json({success:false,message:'Could not create account number'});
     return res.json({success:true, account_number:d.account_number, bank_name:d.bank_name, account_name:d.account_name});
-  }catch(e){ return res.status(400).json({success:false,message:'Unable to create account number'}); }
+  }catch(e){ return res.status(400).json({success:false,message:'Unable to create account number: '+(e.response?.data?.message||e.message||'bank rail refused')}); }
 }
 
 module.exports = {
