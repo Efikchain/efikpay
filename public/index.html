@@ -406,7 +406,8 @@ async function doRealLogin(){
       try{ localStorage.setItem('efikpay_last_email', email); localStorage.setItem('efikpay_logged_in','1'); if(data && data.token) localStorage.setItem('efikpay_token', data.token); }catch(e){}
       if(msg) msg.textContent='✅ Login success - going to Dashboard Home...';
       alert('✅ Welcome back! Going to Dashboard Home.');
-      hideRegisterShowDashboard(); if(typeof showDashboardHome==='function') showDashboardHome(); hideRegisterShowDashboard();
+      if(typeof showDashboardHome==='function') showDashboardHome();
+      setTimeout(function(){ location.reload(); }, 500);
     } else {
       var err = (data && (data.message || data.error)) || ('Login failed ('+res.status+'). Check email / PIN.');
       if(msg) msg.textContent = err;
@@ -443,64 +444,4 @@ document.addEventListener('click', function(e){
   if(btn.id==='doLoginBtn'){ e.preventDefault(); doRealLogin(); }
 });
 try{ window.showLoginForm = showLoginForm; window.doRealLogin = doRealLogin; }catch(e){}
-
-// STAY LOGGED IN - hide Register, show Dashboard when logged in
-function hideRegisterShowDashboard(){
-  try{
-    // Hide Register card: find heading "Create Your EfikPay Account"
-    var all = document.querySelectorAll('h1,h2,h3,div');
-    for(var i=0;i<all.length;i++){
-      var txt = (all[i].textContent||'').trim();
-      if(txt==='Create Your EfikPay Account'){
-        var card = all[i].closest('div');
-        // Walk up to the big card container (up to 4 levels)
-        for(var k=0;k<4 && card && card.parentElement;k++){ card = card.parentElement; }
-        if(card) card.style.display='none';
-        break;
-      }
-    }
-    // Hide login box itself
-    var lb = document.getElementById('efikpayLoginBox'); if(lb) lb.style.display='none';
-    // Hide OTP box
-    var ob = document.getElementById('otpBox'); if(ob) ob.style.display='none';
-    // Show dashboard if it exists
-    var dash = document.getElementById('dashboard') || document.getElementById('homePage') || document.getElementById('home') || document.getElementById('mainDashboard');
-    if(dash) dash.style.display='block';
-    // If no dashboard element, build a simple Dashboard Home so user is NOT stuck on Register
-    if(!dash && !document.getElementById('efikpayDashboardHome')){
-      var d = document.createElement('div');
-      d.id = 'efikpayDashboardHome';
-      var em = '';
-      try{ em = localStorage.getItem('efikpay_last_email') || 'efikcoin@gmail.com'; }catch(e){}
-      d.style.cssText = 'background:#0b1e3a;color:#fff;border-radius:16px;padding:18px;margin:12px;';
-      d.innerHTML = '<h2 style="margin:0;">Welcome to EfikPay 👋</h2>' +
-        '<p style="color:#9fc5ff;margin:6px 0;">Logged in as <b>'+em+'</b></p>' +
-        '<div style="background:#122a4d;border-radius:12px;padding:14px;margin:12px 0;"><div style="font-size:13px;color:#9fc5ff;">Wallet Balance</div><div style="font-size:28px;font-weight:900;">₦0.00</div><div style="font-size:12px;color:#9fc5ff;">EfikPay Wallet • KYC inside wallet</div></div>' +
-        '<div style="display:flex;gap:8px;flex-wrap:wrap;"><button onclick="alert(\'Send coming next - KYC first.\')" style="flex:1;padding:12px;border:none;border-radius:10px;background:#00c853;color:#fff;font-weight:800;">Send</button><button onclick="alert(\'Save coming next.\')" style="flex:1;padding:12px;border:none;border-radius:10px;background:#ffb300;color:#000;font-weight:800;">Save</button><button onclick="alert(\'Bills coming next.\')" style="flex:1;padding:12px;border:none;border-radius:10px;background:#fff;color:#000;font-weight:800;">Bills</button></div>' +
-        '<button onclick="localStorage.removeItem(\'efikpay_logged_in\');location.reload();" style="width:100%;padding:10px;border:none;background:transparent;color:#9fc5ff;margin-top:10px;">Log Out</button>';
-      // Insert at top of body, after header if possible
-      document.body.prepend(d);
-    }
-    window.scrollTo(0,0);
-  }catch(e){}
-}
-// On every page load: if logged in, do NOT show Register
-document.addEventListener('DOMContentLoaded', function(){
-  try{
-    var logged = localStorage.getItem('efikpay_logged_in')==='1' || !!localStorage.getItem('efikpay_token');
-    if(logged){ setTimeout(hideRegisterShowDashboard, 300); }
-  }catch(e){}
-});
-// Also run immediately in case DOMContentLoaded already fired
-try{
-  if(localStorage.getItem('efikpay_logged_in')==='1' || !!localStorage.getItem('efikpay_token')){ setTimeout(hideRegisterShowDashboard, 500); }
-}catch(e){}
-// Fix doRealLogin: do NOT reload to Register - hide Register and show Dashboard directly
-(function(){
-  var orig = window.doRealLogin;
-  // We cannot easily replace async function already defined, so patch showDashboardHome to also hide Register
-  var prevShow = window.showDashboardHome;
-  window.showDashboardHome = function(){ hideRegisterShowDashboard(); if(prevShow){ try{ prevShow(); }catch(e){} } hideRegisterShowDashboard(); };
-})();
-try{ window.hideRegisterShowDashboard = hideRegisterShowDashboard; }catch(e){}
 </script></body></html>
