@@ -45,7 +45,17 @@ label{font-size:13px;color:#9fb3c0}.btn{width:100%;border:0;border-radius:12px;p
 <div class="terms"><input type="checkbox" id="agree"/><span>I agree to <b>EfikPay Terms &amp; Conditions</b> and <b>Privacy Policy</b>. I understand EfikPay will record my device, login time and transaction activity in a secure audit log to protect my money and trace any problem. <a href="#" onclick="alert('EfikPay Terms: Your money is protected. BVN is secret. EfikPay never asks for PIN/OTP/BVN. Failed transfers auto-refund.');return false" style="color:#00c853">Read Terms →</a></span></div>
 <p id="agreeMsg" class="muted"></p>
 <button class="btn green" onclick="goOtp()">Continue → Send OTP</button>
-<button class="btn dark" onclick="show('s-login')">Already have account? Login on New Phone →</button></div></div>
+<button class="btn dark" onclick="show('s-login')">
+<!-- EfikPay OTP BOX - added to let users type Gmail OTP -->
+<div id="otpBox" style="display:none;margin-top:14px;padding:14px;border:1px solid #1f8a4c;border-radius:12px;background:#0f2a1e;">
+  <label style="display:block;font-weight:700;margin-bottom:6px;">Enter OTP from Gmail (6 digits)</label>
+  <input id="otpInput" inputmode="numeric" maxlength="6" placeholder="e.g. 207851" style="width:100%;padding:12px;font-size:18px;letter-spacing:4px;border-radius:10px;border:1px solid #333;background:#0b1e16;color:#fff;" />
+  <button onclick="verifyOtp()" style="width:100%;margin-top:10px;padding:13px;border:none;border-radius:10px;background:#00c853;color:#fff;font-weight:800;font-size:16px;">Verify OTP &rarr; Get Account Done</button>
+  <button onclick="goOtp()" style="width:100%;margin-top:8px;padding:11px;border:1px solid #555;border-radius:10px;background:transparent;color:#fff;">Resend OTP</button>
+  <div id="otpMsg" style="margin-top:8px;font-size:13px;color:#ffd54a;"></div>
+</div>
+
+Already have account? Login on New Phone →</button></div></div>
 
 <!-- LOGIN - NEW PHONE RECOVERY -->
 <div id="s-login" class="screen"><div class="card"><h3 style="margin:0">Welcome Back — Login</h3><p class="muted">Lost your phone? No problem. Download EfikPay on your new phone, login here. Your wallet is stored in secure cloud, <b>not in your old phone</b>. Nothing is missing.</p>
@@ -180,4 +190,33 @@ function copyAcct(){var t=document.getElementById('acctNum').textContent+' | '+d
 function issueAccount(){var b=document.getElementById('bvn').value;if(!/^\d{11}$/.test(b)){document.getElementById('kycMsg').textContent='BVN must be exactly 11 digits.';return}if(!faceDone){document.getElementById('kycMsg').textContent='⚠️ Please complete Face Verification first — tap Verify My Face above.';return}
 var name=(document.getElementById('kName').value||document.getElementById('rName').value||'YOUR NAME').toUpperCase();document.getElementById('kycMsg').textContent='Sending BVN hash to CBN-authorised API... Please wait. Your BVN is never stored in plain text.';
 setTimeout(function(){kycDone=true;document.getElementById('kycBanner').style.display='none';document.getElementById('acctName').textContent='EFIKPAY - '+name;document.getElementById('setName').textContent='EFIKPAY - '+name;document.getElementById('acctNum').textContent='Pending — Issued by CBN Partner API';document.getElementById('setNum').textContent='Pending — Issued by CBN Partner API';document.getElementById('kycState').textContent='KYC: ✅ Verified via CBN API + Face';document.getElementById('lvlLine').textContent='Level: Level 1 • Deposit: ₦500k - ₦1m • Withdraw: ₦200k - ₦500k';document.getElementById('kycMsg').textContent='✅ BVN + Face verified via CBN-authorised API. Your EfikPay account is being printed by the partner bank.';document.getElementById('bvn').value='•••••••••••';show('s-home');},1400)}
+
+async function verifyOtp(){
+  try{
+    var emailEl = document.getElementById('rEm');
+    var codeEl = document.getElementById('otpInput');
+    var msgEl = document.getElementById('otpMsg');
+    var email = emailEl ? emailEl.value.trim() : '';
+    var code = codeEl ? codeEl.value.trim() : '';
+    if(!email){ if(msgEl) msgEl.textContent='Enter your email first.'; return; }
+    if(!code || code.length!==6){ if(msgEl) msgEl.textContent='Enter the 6-digit code from Gmail.'; return; }
+    if(msgEl) msgEl.textContent='Verifying...';
+    var r = await fetch('/api/auth/verify-otp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email, code:code})});
+    var d = await r.json();
+    if(!d.success){ if(msgEl) msgEl.textContent = d.message || 'Wrong OTP. Check Gmail.'; alert(d.message||'Wrong OTP'); return; }
+    if(d.token) localStorage.setItem('efikpay_token', d.token);
+    if(msgEl) msgEl.textContent='Account done! Welcome to EfikPay.';
+    alert('Account done! Welcome to EfikPay. Now do KYC inside wallet.');
+    location.reload();
+  }catch(e){ alert('Verify failed. Try again.'); }
+}
+// Auto-show OTP box after OTP is sent - wrap goOtp if it exists
+
+// Show OTP box 1.5s after tapping Continue -> Send OTP (so user can type Gmail code)
+document.addEventListener('click', function(e){
+  var btn = e.target.closest('button');
+  if(btn && btn.textContent && btn.textContent.indexOf('Send OTP')!==-1){
+    setTimeout(function(){ var b=document.getElementById('otpBox'); if(b) b.style.display='block'; var m=document.getElementById('otpMsg'); if(m) m.textContent='Check Gmail for EfikPay code, type it above.'; var inp=document.getElementById('otpInput'); if(inp) inp.focus(); }, 1500);
+  }
+});
 </script></body></html>
