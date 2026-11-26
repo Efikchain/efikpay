@@ -78,7 +78,7 @@ function verifyOtpCode(email, code){
 // 1) REGISTER
 router.post('/register', async (req, res)=>{
   try{
-    const { fullName, email, phone, pin, terms } = req.body || {};
+    const { email, phone, pin } = req.body || {}; const fullName = req.body.fullName || req.body.name || ''; const terms = req.body.terms ?? true;
     if(!fullName || !email || !phone || !pin) return res.status(400).json({ success:false, message:'Fill full name, email, phone and PIN.' });
     if(!terms) return res.status(400).json({ success:false, message:'Tick Terms to continue.' });
     if(String(pin).length < 4) return res.status(400).json({ success:false, message:'PIN must be at least 4 digits.' });
