@@ -177,7 +177,7 @@ async function doRegister(){
   setMsg('regMsg','Creating account and sending OTP...','');
   $('btnRegister').disabled=true;
   try{
-    var d=await api('/api/auth/register',{name:name,email:email,phone:phone,pin:pin});
+    var d=await api('/api/auth/register',{fullName:name,name:name,email:email,phone:phone,pin:pin,terms:true});
     state.user={name:name,email:email,phone:phone};if(d&&d.token)state.token=d.token;
     saveLocal();$('otpEmailLabel').textContent=email;showScreen('otp');setMsg('otpMsg','OTP sent to '+email+'. Check Gmail / spam.','ok');
   }catch(e){

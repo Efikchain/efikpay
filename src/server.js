@@ -43,3 +43,5 @@ app.use((err, req, res, next) => { console.error(err); res.status(500).json({ su
 
 const PORT = Number(process.env.PORT || 3000);
 app.listen(PORT, '0.0.0.0', () => console.log(`EfikPay listening on 0.0.0.0:${PORT}`));
+
+app.get('/api/health', (req,res)=>res.json({ok:true}));

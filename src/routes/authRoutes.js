@@ -79,13 +79,12 @@ function verifyOtpCode(email, code){
 router.post('/register', async (req, res)=>{
   try{
     const { email, phone, pin } = req.body || {}; const fullName = req.body.fullName || req.body.name || ''; const terms = req.body.terms ?? true;
-    if(!fullName || !email || !phone || !pin) return res.status(400).json({ success:false, message:'Fill full name, email, phone and PIN.' });
-    if(!terms) return res.status(400).json({ success:false, message:'Tick Terms to continue.' });
+    if(!realName || !email || !phone || !pin) return res.status(400).json({ success:false, message:'Fill full name, email, phone and PIN.' });
     if(String(pin).length < 4) return res.status(400).json({ success:false, message:'PIN must be at least 4 digits.' });
     const em = normEmail(email);
     if(users.has(em)) return res.status(400).json({ success:false, message:'This email is already registered. Tap Login.' });
     const pinHash = await bcrypt.hash(String(pin), 10);
-    const user = { id: 'user_'+Date.now(), fullName: String(fullName).trim(), email: em, phone: normPhone(phone), pinHash, isVerified:false, kycDone:false, accountNumber:null, accountName:null, createdAt: new Date().toISOString() };
+    const user = { id: 'user_'+Date.now(), fullName: String(realName).trim(), email: em, phone: normPhone(phone), pinHash, isVerified:false, kycDone:false, accountNumber:null, accountName:null, createdAt: new Date().toISOString() };
     users.set(em, user);
     const sent = await sendEmailOtp(em, 'register');
     if(!sent.ok) return res.status(500).json({ success:false, message:'OTP NOT sent: '+sent.error });
