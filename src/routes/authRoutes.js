@@ -45,9 +45,11 @@ async function sendEmailOtp(email, purpose){
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         api_key: TERMII_API_KEY,
-        email_address: normEmail(email),
-        code: code,
-        email_configuration_id: TERMII_EMAIL_CONFIG_ID
+        email_configuration_id: TERMII_EMAIL_CONFIG_ID,
+        from: 'EfikPay <support@efikcoin.com>',
+        to: normEmail(email),
+        subject: 'Your EfikPay code is ' + code,
+        text: 'Your EfikPay verification code is ' + code + '. This code expires in 10 minutes. Do not share with anyone.'
       })
     });
     const data = await res.json().catch(()=>({}));
