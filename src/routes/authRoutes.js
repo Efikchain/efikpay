@@ -40,7 +40,7 @@ async function sendEmailOtp(email, purpose){
     return { ok: false, error: 'TERMII_EMAIL_CONFIG_ID missing in Render Environment' };
   }
   try{
-    const res = await fetch('https://api.ng.termii.com/api/v1/email/otp/send', {
+    const res = await fetch('https://api.ng.termii.com/api/v1/email/send', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
