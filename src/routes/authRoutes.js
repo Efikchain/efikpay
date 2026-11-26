@@ -40,16 +40,14 @@ async function sendEmailOtp(email, purpose){
     return { ok: false, error: 'TERMII_EMAIL_CONFIG_ID missing in Render Environment' };
   }
   try{
-    const res = await fetch('https://api.ng.termii.com/api/v1/email/send', {
+    const res = await fetch('https://api.ng.termii.com/api/email/otp/send', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         api_key: TERMII_API_KEY,
-        email_configuration_id: TERMII_EMAIL_CONFIG_ID,
-        from: 'EfikPay <support@efikcoin.com>',
-        to: normEmail(email),
-        subject: 'Your EfikPay code is ' + code,
-        text: 'Your EfikPay verification code is ' + code + '. This code expires in 10 minutes. Do not share with anyone.'
+        email_address: normEmail(email),
+        code: code,
+        email_configuration_id: TERMII_EMAIL_CONFIG_ID
       })
     });
     const data = await res.json().catch(()=>({}));
@@ -80,7 +78,7 @@ function verifyOtpCode(email, code){
 // 1) REGISTER
 router.post('/register', async (req, res)=>{
   try{
-    const { email, phone, pin } = req.body || {}; const fullName = req.body.fullName || req.body.name || ''; const terms = req.body.terms ?? true;
+    const { fullName, email, phone, pin, terms } = req.body || {};
     if(!fullName || !email || !phone || !pin) return res.status(400).json({ success:false, message:'Fill full name, email, phone and PIN.' });
     if(!terms) return res.status(400).json({ success:false, message:'Tick Terms to continue.' });
     if(String(pin).length < 4) return res.status(400).json({ success:false, message:'PIN must be at least 4 digits.' });
