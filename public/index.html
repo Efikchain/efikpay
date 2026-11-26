@@ -355,4 +355,93 @@ document.addEventListener('click', function(e){
     setTimeout(function(){ location.reload(); }, 300);
   }
 });
+
+// REAL Login - fix dead "Already have account / Log In" button
+function showLoginForm(){
+  // Hide register / OTP / face cards, show login
+  try{
+    var cards = document.querySelectorAll('div');
+    // Try to find login form by id first
+    var loginForm = document.getElementById('loginForm') || document.getElementById('loginBox') || document.getElementById('login');
+    if(loginForm){ loginForm.style.display='block'; }
+    var face = document.getElementById('faceMsg'); // keep
+    // Scroll to login
+    if(loginForm) loginForm.scrollIntoView({behavior:'smooth'});
+    else {
+      // No login form exists - create one inline at top
+      var box = document.getElementById('efikpayLoginBox');
+      if(!box){
+        box = document.createElement('div');
+        box.id = 'efikpayLoginBox';
+        box.style.cssText = 'background:#fff;color:#000;border-radius:16px;padding:16px;margin:12px;';
+        box.innerHTML = '<h2 style="margin:0 0 10px;">Welcome Back - Log In</h2>' +
+          '<label style="font-size:13px;">Email</label>' +
+          '<input id="loginEmail" type="email" placeholder="efikcoin@gmail.com" style="width:100%;padding:12px;border:1px solid #ccc;border-radius:10px;margin:6px 0 10px;" />' +
+          '<label style="font-size:13px;">PIN</label>' +
+          '<input id="loginPin" type="password" inputmode="numeric" maxlength="6" placeholder="Enter your PIN" style="width:100%;padding:12px;border:1px solid #ccc;border-radius:10px;margin:6px 0 10px;" />' +
+          '<button id="doLoginBtn" onclick="doRealLogin()" style="width:100%;padding:14px;border:none;border-radius:12px;background:#0b5ed7;color:#fff;font-weight:800;font-size:16px;">Log In to Dashboard</button>' +
+          '<div id="loginMsg" style="margin-top:10px;font-size:13px;color:#b71c1c;"></div>' +
+          '<button onclick="document.getElementById(\'efikpayLoginBox\').style.display=\'none\'" style="width:100%;padding:10px;border:none;background:transparent;color:#555;margin-top:6px;">Back</button>';
+        document.body.prepend(box);
+      } else { box.style.display='block'; }
+      var em = document.getElementById('loginEmail');
+      // Pre-fill with last email used
+      try{ var last = localStorage.getItem('efikpay_last_email') || localStorage.getItem('efikpay_email') || ''; if(em && !em.value) em.value = last; }catch(e){}
+    }
+  }catch(e){ alert('Login error: '+e.message); }
+}
+async function doRealLogin(){
+  var msg = document.getElementById('loginMsg');
+  var emailEl = document.getElementById('loginEmail') || document.getElementById('email') || document.querySelector('input[type="email"]');
+  var pinEl = document.getElementById('loginPin') || document.getElementById('pin') || document.querySelector('input[type="password"]');
+  var email = emailEl ? emailEl.value.trim().toLowerCase() : '';
+  var pin = pinEl ? pinEl.value.trim() : '';
+  if(!email){ if(msg) msg.textContent='Enter your email.'; alert('Enter your email.'); return; }
+  if(!pin){ if(msg) msg.textContent='Enter your PIN.'; alert('Enter your PIN.'); return; }
+  if(msg) msg.textContent='Logging in...';
+  try{
+    var res = await fetch('/api/auth/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({email: email, pin: pin, password: pin}) });
+    var data = null; try{ data = await res.json(); }catch(e){}
+    if(res.ok){
+      try{ localStorage.setItem('efikpay_last_email', email); localStorage.setItem('efikpay_logged_in','1'); if(data && data.token) localStorage.setItem('efikpay_token', data.token); }catch(e){}
+      if(msg) msg.textContent='✅ Login success - going to Dashboard Home...';
+      alert('✅ Welcome back! Going to Dashboard Home.');
+      if(typeof showDashboardHome==='function') showDashboardHome();
+      setTimeout(function(){ location.reload(); }, 500);
+    } else {
+      var err = (data && (data.message || data.error)) || ('Login failed ('+res.status+'). Check email / PIN.');
+      if(msg) msg.textContent = err;
+      alert(err);
+    }
+  }catch(e){
+    // Backend unreachable - still let user see dashboard if they have a verified account saved locally
+    var hasLocal = false;
+    try{ hasLocal = localStorage.getItem('efikpay_face_verified')==='1' || localStorage.getItem('efikpay_last_email')===email; }catch(_){}
+    if(hasLocal){
+      if(msg) msg.textContent='Server unreachable, opening saved account...';
+      alert('Server unreachable, opening your saved account.');
+      if(typeof showDashboardHome==='function') showDashboardHome();
+      setTimeout(function(){ location.reload(); }, 500);
+    } else {
+      if(msg) msg.textContent='Cannot reach server. Check internet / Render is Live. Error: '+e.message;
+      alert('Cannot reach server. Check internet and that Render is Live. Error: '+e.message);
+    }
+  }
+}
+// Wire EVERY "Already have account / Log In / Login" button - the old ones were dead
+document.addEventListener('click', function(e){
+  var btn = e.target.closest('button, a, div, span, p');
+  if(!btn) return;
+  var txt = (btn.textContent||'').trim().toLowerCase();
+  // Match: "already have an account", "already have account", "log in", "login", "sign in"
+  var isLoginBtn = txt.indexOf('already have')!==-1 || txt==='log in' || txt==='login' || txt==='sign in' || txt.indexOf('log in to')!==-1;
+  if(isLoginBtn){
+    e.preventDefault();
+    e.stopPropagation();
+    showLoginForm();
+  }
+  // Also wire the inner Do Login button if it was created by old code
+  if(btn.id==='doLoginBtn'){ e.preventDefault(); doRealLogin(); }
+});
+try{ window.showLoginForm = showLoginForm; window.doRealLogin = doRealLogin; }catch(e){}
 </script></body></html>
