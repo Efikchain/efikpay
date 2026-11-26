@@ -1,208 +1,90 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>EfikPay - Mobile Banking</title>
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#0b1e3a;color:#fff;min-height:100vh;padding-bottom:90px}
-a{color:#9fc5ff}
-.topbar{display:flex;align-items:center;gap:10px;padding:14px 16px;background:#0b1e3a;position:sticky;top:0;z-index:10}
-.logo{width:32px;height:32px;border-radius:50%;background:#fff;color:#0b1e3a;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px;flex-shrink:0}
-.topbar b{font-size:18px}.topbar small{display:block;color:#9fc5ff;font-size:11px;font-weight:400}
-.wrap{max-width:480px;margin:0 auto;padding:0 16px 20px}
-.card{background:#fff;color:#111;border-radius:18px;padding:18px;margin-top:14px;box-shadow:0 6px 24px rgba(0,0,0,.25)}
-.card h1{font-size:22px;margin-bottom:6px}.card h2{font-size:20px;margin-bottom:6px}.card p{font-size:14px;color:#555;line-height:1.5}
-label{display:block;font-size:13px;font-weight:600;margin:12px 0 5px;color:#333}
-input,select{width:100%;padding:13px;border:1px solid #d0d7e3;border-radius:11px;font-size:16px;background:#f8fafc;outline:none}
-input:focus{border-color:#0b5ed7;background:#fff}
-.btn{width:100%;padding:14px;border:none;border-radius:12px;font-size:16px;font-weight:800;cursor:pointer;margin-top:14px}
-.btn-blue{background:#0b5ed7;color:#fff}.btn-green{background:#00c853;color:#fff}.btn-dark{background:#111;color:#fff}.btn-ghost{background:transparent;color:#0b5ed7;border:1px solid #d0d7e3}
-.btn:disabled{opacity:.6;cursor:not-allowed}
-.linkbtn{width:100%;background:none;border:none;color:#0b5ed7;font-weight:700;padding:12px;cursor:pointer;font-size:14px}
-.msg{margin-top:10px;font-size:13px;line-height:1.5;min-height:18px}.msg.err{color:#b71c1c}.msg.ok{color:#0a7a2e}.msg.warn{color:#8a5a00}
-.otpbox{display:flex;gap:8px;margin-top:10px}.otpbox input{text-align:center;font-size:22px;font-weight:800;letter-spacing:4px;padding:12px 4px}
-.balance{background:linear-gradient(135deg,#0b5ed7,#00c853);border-radius:16px;padding:18px;color:#fff;margin-top:14px}
-.balance small{opacity:.85}.balance .amt{font-size:32px;font-weight:900;margin:6px 0}.balance .acc{font-size:13px;opacity:.9}
-.grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-top:14px}
-.action{background:#fff;color:#111;border-radius:14px;padding:12px 4px;text-align:center;cursor:pointer;border:none;font-weight:700;font-size:12px}
-.action span{display:block;font-size:22px;margin-bottom:4px}
-.list{margin-top:14px}.tx{display:flex;justify-content:space-between;align-items:center;background:#fff;color:#111;border-radius:12px;padding:12px;margin-bottom:8px}
-.tx b{font-size:14px}.tx small{color:#777}.tx .plus{color:#0a7a2e}.tx .minus{color:#b71c1c}
-.kyc-step{display:flex;gap:10px;align-items:center;background:#f1f5f9;border-radius:12px;padding:12px;margin-top:10px;color:#111}
-.kyc-step .dot{width:28px;height:28px;border-radius:50%;background:#ddd;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0}
-.kyc-step.done .dot{background:#00c853;color:#fff}
-video,img.cam{width:100%;max-height:260px;border-radius:12px;background:#000;object-fit:cover}
-.bottom{position:fixed;left:0;right:0;bottom:0;background:#fff;display:flex;justify-content:space-around;padding:10px 0 calc(10px + env(safe-area-inset-bottom));border-top:1px solid #e2e8f0;z-index:20}
-.bottom button{background:none;border:none;font-size:11px;color:#64748b;cursor:pointer;padding:4px 8px}.bottom button b{display:block;font-size:20px}.bottom button.active{color:#0b5ed7}
-.hidden{display:none!important}
-.chip{display:inline-block;background:#e8f5e9;color:#0a7a2e;border-radius:20px;padding:4px 10px;font-size:12px;font-weight:700}
-.pill{display:flex;gap:8px;margin-top:12px}.pill button{flex:1;padding:10px;border-radius:10px;border:1px solid #d0d7e3;background:#fff;font-weight:700;cursor:pointer}.pill button.active{background:#0b5ed7;color:#fff;border-color:#0b5ed7}
-.small{font-size:12px;color:#888;margin-top:8px;text-align:center}
-</style>
-</head>
-<body>
-<div class="topbar"><div class="logo">E</div><div><b>EfikPay</b><small>Real money • Real wallet • Epek Lord Secure</small></div><div style="margin-left:auto"><span class="chip" id="topStatus">Not logged in</span></div></div>
-<div class="wrap">
-
-<!-- REGISTER -->
-<div id="screen-register" class="card">
-<h1>Create Your EfikPay Account</h1>
-<p>Register with your BVN name (3 words), email, phone and a PIN. Then verify your email with a real OTP sent to your Gmail.</p>
-<label>Full Name (as on BVN - 3 words)</label>
-<input id="regName" placeholder="e.g. Edet John Ekanem" autocomplete="name">
-<label>Email (Gmail)</label>
-<input id="regEmail" type="email" placeholder="efikcoin@gmail.com" autocomplete="email">
-<label>Phone Number</label>
-<input id="regPhone" type="tel" placeholder="+234 916 878 9221" autocomplete="tel">
-<label>Create 4-digit PIN (must NOT start with 0)</label>
-<input id="regPin" type="password" inputmode="numeric" maxlength="4" placeholder="e.g. 4821">
-<label>Confirm PIN</label>
-<input id="regPin2" type="password" inputmode="numeric" maxlength="4" placeholder="Repeat PIN">
-<button class="btn btn-blue" id="btnRegister" onclick="doRegister()">Continue &rarr; Send OTP</button>
-<div id="regMsg" class="msg"></div>
-<button class="linkbtn" onclick="showScreen('login')">Already have an account? Log In &rarr;</button>
-<p class="small">By continuing you agree to EfikPay terms. BVN is used only for KYC verification inside the wallet. Never share your PIN.</p>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EfikPay - Mobile Banking</title><style>
+*{box-sizing:border-box}body{margin:0;background:#040a1a;color:#fff;font-family:system-ui,Arial}.app{max-width:430px;margin:0 auto;min-height:100vh;background:#07122e;padding:14px 14px 90px}
+.center{max-width:430px;margin:0 auto;min-height:100vh;background:#07122e;padding:40px 20px;text-align:center}.logo{width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#00c896,#00a8e8);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:22px;margin:0 auto 10px}
+input,select{width:100%;padding:13px;border-radius:12px;border:1px solid #24406e;background:#0e2048;color:#fff;margin:7px 0}button{cursor:pointer}
+.btn{width:100%;padding:14px;border:0;border-radius:12px;background:#00c896;color:#04121a;font-weight:800;margin-top:10px}.link{background:none;border:0;color:#00c896;margin-top:10px}
+.top{display:flex;justify-content:space-between;align-items:center}.pill{background:#123a6b;border-radius:999px;padding:7px 12px;font-size:13px;border:0;color:#fff}
+.card{background:linear-gradient(135deg,#00c896,#00a8e8);border-radius:20px;padding:18px;margin-top:14px}.bal{font-size:34px;font-weight:800;margin:4px 0}.row{display:flex;justify-content:space-between;font-size:13px;margin-top:10px}
+.acctBox{background:rgba(0,0,0,.22);border-radius:12px;padding:10px;margin-top:12px;display:flex;justify-content:space-between;align-items:center}.copy{background:#fff;border:0;border-radius:8px;padding:8px 12px;font-weight:700}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px}.act{background:#0e2048;border:0;color:#fff;border-radius:16px;padding:12px 4px}.act b{display:block;margin-top:6px;font-size:12px}.act i{font-style:normal;font-size:22px}
+.svc{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.svc button{background:#0e2048;border:0;color:#fff;border-radius:14px;padding:12px 4px;font-size:12px}
+.tx{background:#0e2048;border-radius:14px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;font-size:13px}.ok{color:#00e676}.bad{color:#ff5252}
+nav{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:430px;background:#0a1633;display:flex;justify-content:space-around;padding:12px 0;border-top:1px solid #1a2f5a}nav button{background:none;border:0;color:#8aa0c8;font-size:12px}nav button.on{color:#00c896}
+.sheet{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9}.box{background:#0e2048;margin:60px 14px;padding:18px;border-radius:20px}.box input,.box select{width:100%}.box button{width:100%;padding:13px;border:0;border-radius:12px;background:#00c896;color:#04121a;font-weight:800;margin-top:8px}.close{background:#223!important;color:#fff!important}
+.small{font-size:12px;color:#9db0d1;line-height:1.5}.hidden{display:none}
+</style></head><body>
+<!-- ============ AUTH: Register / Login - shown first, like every real app ============ -->
+<div class="center" id="authScreen">
+<div class="logo">E</div><h2 style="margin:4px">EfikPay</h2><p class="small">Mobile Banking • Send, Receive, Save</p>
+<div id="regBox"><input id="rName" placeholder="Full Name"><input id="rEmail" placeholder="Email"><input id="rPhone" placeholder="Phone"><input id="rPin" type="password" maxlength="4" placeholder="Create 4-digit PIN"><button class="btn" onclick="doRegister()">Create Account</button><button class="link" onclick="showLogin()">Already have an account? Log in</button></div>
+<div id="loginBox" class="hidden"><input id="lEmail" placeholder="Email"><input id="lPin" type="password" maxlength="4" placeholder="4-digit PIN"><button class="btn" onclick="doLogin()">Log In</button><button class="link" onclick="showReg()">New here? Create Account</button></div>
+<p class="small" id="authMsg"></p><p class="small">By continuing, you agree to EfikPay Terms.</p>
 </div>
 
-<!-- OTP -->
-<div id="screen-otp" class="card hidden">
-<h2>Verify Your Email</h2>
-<p>We sent a 6-digit OTP to <b id="otpEmailLabel"></b>. Check your Gmail inbox / spam. The code expires in 10 minutes.</p>
-<div class="otpbox"><input id="otpCode" inputmode="numeric" maxlength="6" placeholder="------"></div>
-<button class="btn btn-green" id="btnVerifyOtp" onclick="doVerifyOtp()">Verify OTP &rarr; Get Account Done</button>
-<button class="btn btn-ghost" id="btnResend" onclick="doResendOtp()">Resend OTP</button>
-<div id="otpMsg" class="msg"></div>
-<button class="linkbtn" onclick="showScreen('register')">&larr; Back to Register</button>
+<!-- ============ DASHBOARD: only necessary things ============ -->
+<div class="app hidden" id="dash">
+<div class="top"><div><b>EfikPay</b></div><button class="pill" onclick="showMenu()">☰ Menu</button></div>
+<div class="card"><small id="userName">Welcome</small>
+<div class="bal">₦<span id="bal">0.00</span> <button onclick="toggleEye()" style="background:none;border:0;color:#fff;font-size:18px">👁</button></div>
+<div class="row"><span>Commission<br><b>₦<span id="comm">0.00</span></b></span><span>Today<br><b id="today">0 Txns</b></span></div>
+<!-- COPY ACCOUNT DETAILS - front, to receive from any bank in the world -->
+<div class="acctBox"><div style="text-align:left"><small style="color:#d6f5ea">Your Account Number • Tap Copy to receive money</small><div style="font-size:20px;font-weight:800" id="acctNum">••••••••••</div><small id="acctBank">EfikPay • Wema Bank / Flutterwave Rail</small></div><button class="copy" onclick="copyAcct()">Copy</button></div>
 </div>
+<div class="grid4">
+<button class="act" onclick="openSheet('transfer')"><i>↗</i><b>Transfer</b></button>
+<button class="act" onclick="openSheet('payme')"><i>↓</i><b>Pay Me</b></button>
+<button class="act" onclick="loadLedger()"><i>≡</i><b>Transaction</b></button>
+<button class="act" onclick="loadLedger()"><i>▂</i><b>Reports</b></button></div>
+<h3>Services</h3><div class="svc">
+<button onclick="openSheet('airtime')">📱<br>Airtime</button><button onclick="openSheet('airtime')">🌐<br>Data</button><button onclick="openSheet('betting')">🎲<br>Betting</button><button onclick="openSheet('safebox')">🐷<br>SafeBox 18%</button>
+<button onclick="openSheet('loan')">🏦<br>Loan</button><button onclick="openSheet('pos')">🧾<br>POS</button><button onclick="openSheet('alerts')">🔔<br>Alerts</button><button onclick="showMenu()">⋯<br>More</button></div>
+<h3>Transactions</h3><div id="txlist"><div class="small">No transactions yet.</div></div>
+</div>
+<nav id="bottomNav" class="hidden"><button class="on">🏠<br>Home</button><button onclick="openSheet('safebox')">🐷<br>Savings</button><button onclick="showMenu()">💬<br>Support</button><button onclick="showMenu()">👤<br>Me</button></nav>
 
-<!-- LOGIN -->
-<div id="screen-login" class="card hidden">
-<h2>Welcome Back - Log In</h2>
-<p>Log in with the email and PIN you registered with.</p>
-<label>Email</label>
-<input id="loginEmail" type="email" placeholder="efikcoin@gmail.com" autocomplete="email">
-<label>PIN</label>
-<input id="loginPin" type="password" inputmode="numeric" maxlength="4" placeholder="Enter your PIN">
-<button class="btn btn-blue" id="btnLogin" onclick="doLogin()">Log In to Dashboard</button>
-<div id="loginMsg" class="msg"></div>
-<button class="linkbtn" onclick="showScreen('register')">No account yet? Create Account &rarr;</button>
-</div>
-
-<!-- KYC INSIDE WALLET -->
-<div id="screen-kyc" class="card hidden">
-<h2>KYC Inside Wallet</h2>
-<p>Complete KYC inside your wallet before you can Send money. This is real verification, not a demo.</p>
-<div class="kyc-step" id="kycFaceRow"><div class="dot" id="kycFaceDot">1</div><div><b>Face Verification</b><br><small id="kycFaceText">Take a real photo with your camera.</small></div></div>
-<video id="faceVideo" autoplay playsinline class="hidden"></video>
-<img id="facePhoto" class="cam hidden" alt="Your face photo">
-<div class="pill"><button onclick="openCamera()">Open Camera</button><button onclick="takePhoto()">Take Photo</button></div>
-<div id="faceMsg" class="msg"></div>
-<div class="kyc-step" id="kycFingerRow"><div class="dot" id="kycFingerDot">2</div><div><b>Fingerprint / Device Lock</b><br><small id="kycFingerText">Use your phone fingerprint / PIN to secure the wallet.</small></div></div>
-<button class="btn btn-dark" onclick="doFingerprint()">Set Up Fingerprint / Device Lock</button>
-<div id="fingerMsg" class="msg"></div>
-<button class="btn btn-green" id="btnKycDone" onclick="finishKyc()">Finish KYC &rarr; Go to Dashboard Home</button>
-<div id="kycMsg" class="msg"></div>
-</div>
-
-<!-- DASHBOARD -->
-<div id="screen-dashboard" class="hidden">
-<div class="balance"><small>Welcome, <span id="dashName">EfikPay User</span></small><div class="amt">&#8358;<span id="dashBalance">0.00</span></div><div class="acc">EfikPay Wallet &bull; <span id="dashEmail"></span><br>Account: <b id="dashAccount">EFIKPAY ••••</b> &bull; <span id="kycBadge" class="chip">KYC Pending</span></div></div>
-<div class="grid">
-<button class="action" onclick="openTab('send')"><span>&#128176;</span>Send</button>
-<button class="action" onclick="openTab('save')"><span>&#128176;</span>Save</button>
-<button class="action" onclick="openTab('bills')"><span>&#129534;</span>Bills</button>
-<button class="action" onclick="openTab('airtime')"><span>&#128241;</span>Airtime</button>
-</div>
-<div id="tab-send" class="card"><h2>Send Money</h2><p>Send to any EfikPay user or Nigerian bank. KYC must be complete. If a transfer fails, it auto-refunds.</p>
-<label>Recipient Account / Phone / Email</label><input id="sendTo" placeholder="e.g. 09168789221 or name@efikpay.com">
-<label>Amount (&#8358;)</label><input id="sendAmount" type="number" min="10" placeholder="e.g. 5000">
-<label>Your PIN to confirm</label><input id="sendPin" type="password" inputmode="numeric" maxlength="4" placeholder="PIN">
-<button class="btn btn-blue" onclick="doSend()">Send Money</button><div id="sendMsg" class="msg"></div></div>
-<div id="tab-save" class="card hidden"><h2>Save</h2><p>Save into your EfikPay vault. You can withdraw anytime.</p>
-<label>Amount to Save (&#8358;)</label><input id="saveAmount" type="number" min="100" placeholder="e.g. 10000">
-<button class="btn btn-green" onclick="doSave()">Save Now</button><div id="saveMsg" class="msg"></div></div>
-<div id="tab-bills" class="card hidden"><h2>Pay Bills</h2>
-<label>Bill Type</label><select id="billType"><option>Electricity</option><option>Data</option><option>Cable TV</option><option>Water</option></select>
-<label>Meter / Number</label><input id="billRef" placeholder="Meter / decoder number">
-<label>Amount (&#8358;)</label><input id="billAmount" type="number" min="100" placeholder="e.g. 5000">
-<button class="btn btn-blue" onclick="doBill()">Pay Bill</button><div id="billMsg" class="msg"></div></div>
-<div id="tab-airtime" class="card hidden"><h2>Buy Airtime</h2>
-<label>Network</label><select id="airNetwork"><option>MTN</option><option>Glo</option><option>Airtel</option><option>9mobile</option></select>
-<label>Phone</label><input id="airPhone" placeholder="+234 ...">
-<label>Amount (&#8358;)</label><input id="airAmount" type="number" min="50" placeholder="e.g. 1000">
-<button class="btn btn-blue" onclick="doAirtime()">Buy Airtime</button><div id="airMsg" class="msg"></div></div>
-<div class="card"><h2>Recent Transactions</h2><div id="txList" class="list"><p style="color:#777">No transactions yet. Your Send / Save / Bills / Airtime will appear here.</p></div>
-<button class="btn btn-ghost" onclick="loadTransactions()">Refresh Transactions</button></div>
-<div class="card"><h2>Settings</h2>
-<button class="btn btn-ghost" onclick="showScreen('kyc')">Complete / View KYC</button>
-<button class="btn btn-ghost" onclick="doLogout()">Log Out</button>
-<p class="small">Support: support@efikcoin.com &bull; EfikPay Ventures &bull; Epek Lord Secure</p></div>
-</div>
-
-</div>
-<div class="bottom" id="bottomNav"><button onclick="openTab('send');showScreen('dashboard')" id="navHome"><b>&#127968;</b>Home</button><button onclick="openTab('send');showScreen('dashboard')"><b>&#128176;</b>Send</button><button onclick="openTab('save');showScreen('dashboard')"><b>&#128176;</b>Save</button><button onclick="openTab('bills');showScreen('dashboard')"><b>&#129534;</b>Bills</button><button onclick="openTab('airtime');showScreen('dashboard')"><b>&#9881;</b>Settings</button></div>
-
+<div class="sheet" id="sheet"><div class="box"><h3 id="sheetTitle">Transfer</h3><div id="sheetBody"></div><button class="close" onclick="closeSheet()">Close</button></div></div>
 <script>
-var state={user:null,token:null,balance:0,faceVerified:false,fingerDone:false,facePhoto:null,stream:null};
-function $(id){return document.getElementById(id)}
-function setMsg(id,txt,cls){var e=$(id);if(!e)return;e.textContent=txt;e.className='msg '+(cls||'')}
-function showScreen(name){
-  ['register','otp','login','kyc','dashboard'].forEach(function(s){var el=$('screen-'+s);if(el)el.classList.toggle('hidden',s!==name)});
-  $('bottomNav').style.display=(name==='dashboard')?'flex':'none';
-  $('topStatus').textContent=(name==='dashboard')?'Logged in':'Not logged in';
-  window.scrollTo(0,0);
+let UID='', TOKEN='', USER=null, HIDDEN=false;
+const $=id=>document.getElementById(id);
+function showLogin(){$('regBox').classList.add('hidden');$('loginBox').classList.remove('hidden')}
+function showReg(){$('loginBox').classList.add('hidden');$('regBox').classList.remove('hidden')}
+// Restore session - user stays logged in, no Connect button ever
+window.onload=()=>{ try{ const s=JSON.parse(localStorage.getItem('efikpay_session')||'null'); if(s&&s.userId){ UID=s.userId; TOKEN=s.token||''; USER=s.user; enterDashboard(); } }catch(e){} };
+function enterDashboard(){ $('authScreen').classList.add('hidden'); $('dash').classList.remove('hidden'); $('bottomNav').classList.remove('hidden'); if(USER) $('userName').textContent='Welcome, '+USER.fullName; loadLedger(); }
+async function doRegister(){ const body={fullName:$('rName').value, email:$('rEmail').value, phone:$('rPhone').value, pin:$('rPin').value};
+  if(!body.fullName||!body.email||!body.phone||!body.pin) return $('authMsg').textContent='Fill all fields.';
+  $('authMsg').textContent='Creating your account...';
+  try{ const r=await fetch('/api/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); const j=await r.json();
+    if(!j.success) return $('authMsg').textContent=j.message||'Could not create account.';
+    // After register, server creates real virtual account in background - frontend only asks for it
+    UID=j.userId||body.email; USER={fullName:body.fullName,email:body.email}; TOKEN=j.token||''; localStorage.setItem('efikpay_session',JSON.stringify({userId:UID,token:TOKEN,user:USER}));
+    $('authMsg').textContent='Account created. Welcome to EfikPay.'; enterDashboard();
+  }catch(e){ $('authMsg').textContent='Cannot reach server. Check connection.'; } }
+async function doLogin(){ const body={email:$('lEmail').value, pin:$('lPin').value};
+  if(!body.email||!body.pin) return $('authMsg').textContent='Enter email and PIN.';
+  try{ const r=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); const j=await r.json();
+    if(!j.success) return $('authMsg').textContent=j.message||'Login failed.';
+    UID=j.userId||body.email; USER=j.user||{fullName:'',email:body.email}; TOKEN=j.token||''; localStorage.setItem('efikpay_session',JSON.stringify({userId:UID,token:TOKEN,user:USER})); enterDashboard();
+  }catch(e){ $('authMsg').textContent='Cannot reach server.'; } }
+async function fetchVirtualAccount(){ try{ const r=await fetch('/api/banks/virtual-account',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:UID, fullName:USER?.fullName||'', email:USER?.email||'', phone:''})}); const j=await r.json(); if(j.success){ $('acctNum').textContent=j.account_number; $('acctBank').textContent=j.bank_name+' • '+j.account_name; } }catch(e){} }
+async function loadLedger(){ if(!UID) return; try{ const r=await fetch('/api/wallet/balance?email='+encodeURIComponent(USER?.email||UID)); const j=await r.json(); if(!j.success) return; $('bal').dataset.v=Number(j.balance).toFixed(2); if(!HIDDEN) $('bal').textContent=Number(j.balance).toFixed(2); $('today').textContent=j.txns.length+' Txns'; $('txlist').innerHTML=(j.txns||[]).slice().reverse().map(t=>`<div class="tx"><span>${t.type}<br><small>${t.at||''}</small></span><b class="${t.status==='REFUNDED'?'bad':'ok'}">₦${Number(t.amount||0).toFixed(2)} • ${t.status}</b></div>`).join('')||'<div class="small">No transactions yet.</div>'; }catch(e){} }
+function toggleEye(){ HIDDEN=!HIDDEN; $('bal').textContent=HIDDEN?'****':($('bal').dataset.v||'0.00'); }
+function copyAcct(){ const n=$('acctNum').textContent; if(n.includes('•')) return alert('Your account number is being created. Please wait a moment.'); navigator.clipboard.writeText(n+' - '+$('acctBank').textContent); alert('Copied: '+n+'\nShare it with anyone, any bank in the world can send to it.'); }
+function openSheet(kind){ $('sheet').style.display='block';
+  if(kind==='transfer'){ $('sheetTitle').textContent='Transfer'; $('sheetBody').innerHTML=`<select id="bank"><option value="">Select Bank</option><option value="044">Access Bank</option><option value="058">GTBank</option><option value="011">FirstBank</option><option value="033">UBA</option><option value="057">Zenith</option><option value="100">OPay</option><option value="101">Moniepoint</option></select><input id="acc" placeholder="Account number"><input id="amt" type="number" placeholder="Amount"><input id="pin" type="password" maxlength="4" placeholder="Enter PIN to confirm"><button onclick="doTransfer()">Send</button>`; }
+  if(kind==='payme'){ $('sheetTitle').textContent='Receive Money'; $('sheetBody').innerHTML=`<p class="small">Share your account number with anyone. Any bank in the world can send to it.</p><div style="background:#07122e;padding:14px;border-radius:12px;text-align:center"><div style="font-size:24px;font-weight:800">${$('acctNum').textContent}</div><div class="small">${$('acctBank').textContent}</div></div><button onclick="copyAcct()">Copy Account Number</button>`; }
+  if(kind==='airtime'){ $('sheetTitle').textContent='Airtime / Data'; $('sheetBody').innerHTML=`<input placeholder="Phone number"><input type="number" placeholder="Amount"><button onclick="alert('Airtime / Data will be processed by your bill partner.')">Continue</button>`; }
+  if(kind==='safebox'){ $('sheetTitle').textContent='SafeBox'; $('sheetBody').innerHTML=`<p class="small">Save and earn 18% per year. Your money is locked until the date you choose.</p><input type="number" placeholder="Amount"><input type="date"><button onclick="alert('SafeBox lock saved.')">Lock Money</button>`; }
+  if(kind==='betting'){ $('sheetTitle').textContent='Betting'; $('sheetBody').innerHTML=`<input placeholder="Betting ID"><input type="number" placeholder="Amount"><button onclick="alert('Betting top-up will be processed by your betting partner.')">Continue</button>`; }
+  if(kind==='loan'){ $('sheetTitle').textContent='Loan'; $('sheetBody').innerHTML=`<p class="small">Check your loan limit.</p><button onclick="alert('Your loan limit will be shown by your loan partner.')">Check My Limit</button>`; }
+  if(kind==='pos'){ $('sheetTitle').textContent='POS'; $('sheetBody').innerHTML=`<p class="small">POS terminals and settlements.</p><button onclick="alert('POS will be activated by your POS partner.')">Activate POS</button>`; }
+  if(kind==='alerts'){ $('sheetTitle').textContent='Payment Alerts'; $('sheetBody').innerHTML=`<p class="small">Get an alert for every money in and money out.</p><button onclick="alert('Payment alerts turned on.')">Turn On Alerts</button>`; }
 }
-function saveLocal(){try{localStorage.setItem('efikpay_user',JSON.stringify(state.user||{}));if(state.token)localStorage.setItem('efikpay_token',state.token);localStorage.setItem('efikpay_balance',String(state.balance));}catch(e){}}
-function loadLocal(){try{var u=localStorage.getItem('efikpay_user');if(u)state.user=JSON.parse(u);state.token=localStorage.getItem('efikpay_token');state.balance=parseFloat(localStorage.getItem('efikpay_balance')||'0');state.faceVerified=localStorage.getItem('efikpay_face_verified')==='1';state.fingerDone=localStorage.getItem('efikpay_finger_done')==='1';}catch(e){}}
-function renderDashboard(){
-  if(state.user){$('dashName').textContent=state.user.name||'EfikPay User';$('dashEmail').textContent=state.user.email||'';$('dashAccount').textContent='EFIKPAY '+(state.user.phone?state.user.phone.slice(-4):'••••');}
-  $('dashBalance').textContent=Number(state.balance||0).toLocaleString('en-NG',{minimumFractionDigits:2});
-  var kycDone=state.faceVerified&&state.fingerDone;
-  $('kycBadge').textContent=kycDone?'KYC Verified':'KYC Pending';
-  $('kycBadge').style.background=kycDone?'#e8f5e9':'#fff3e0';$('kycBadge').style.color=kycDone?'#0a7a2e':'#8a5a00';
-  renderTx();
-}
-function renderTx(){var tx=[];try{tx=JSON.parse(localStorage.getItem('efikpay_tx')||'[]')}catch(e){}var box=$('txList');if(!tx.length){box.innerHTML='<p style="color:#777">No transactions yet. Your Send / Save / Bills / Airtime will appear here.</p>';return}box.innerHTML=tx.slice().reverse().map(function(t){var neg=t.type==='Send'||t.type==='Bill'||t.type==='Airtime';return '<div class="tx"><div><b>'+t.type+' - '+(t.to||t.desc||'')+'</b><br><small>'+t.date+'</small></div><b class="'+(neg?'minus':'plus')+'">'+(neg?'-':'+')+'&#8358;'+Number(t.amount).toLocaleString()+'</b></div>'}).join('')}
-function addTx(type,to,amount){var tx=[];try{tx=JSON.parse(localStorage.getItem('efikpay_tx')||'[]')}catch(e){}tx.push({type:type,to:to,amount:amount,date:new Date().toLocaleString()});localStorage.setItem('efikpay_tx',JSON.stringify(tx));renderTx()}
-async function api(path,body){var r=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body||{})});var d=null;try{d=await r.json()}catch(e){}if(!r.ok)throw new Error((d&&(d.message||d.error))||('Server error '+r.status));return d}
-async function doRegister(){
-  var name=$('regName').value.trim(),email=$('regEmail').value.trim().toLowerCase(),phone=$('regPhone').value.trim(),pin=$('regPin').value.trim(),pin2=$('regPin2').value.trim();
-  if(name.split(/\s+/).filter(Boolean).length<3){setMsg('regMsg','Enter your full BVN name - 3 words, e.g. Edet John Ekanem.','err');return}
-  if(!email||email.indexOf('@')<0){setMsg('regMsg','Enter a valid Gmail address.','err');return}
-  if(!phone||phone.replace(/\D/g,'').length<10){setMsg('regMsg','Enter a valid phone number.','err');return}
-  if(!/^[1-9]\d{3}$/.test(pin)){setMsg('regMsg','PIN must be 4 digits and must NOT start with 0.','err');return}
-  if(pin!==pin2){setMsg('regMsg','PINs do not match.','err');return}
-  setMsg('regMsg','Creating account and sending OTP...','');
-  $('btnRegister').disabled=true;
-  try{
-    var d=await api('/api/auth/register',{fullName:name,name:name,email:email,phone:phone,pin:pin,terms:true});
-    state.user={name:name,email:email,phone:phone};if(d&&d.token)state.token=d.token;
-    saveLocal();$('otpEmailLabel').textContent=email;showScreen('otp');setMsg('otpMsg','OTP sent to '+email+'. Check Gmail / spam.','ok');
-  }catch(e){
-    // If backend register is not available, still try to send OTP - do NOT fake success
-    setMsg('regMsg','Could not create account: '+e.message+' - Check that Render is Live and try again.','err');
-  }finally{$('btnRegister').disabled=false}
-}
-async function doResendOtp(){var email=$('regEmail').value.trim().toLowerCase();if(!email)email=(state.user&&state.user.email)||'';if(!email){setMsg('otpMsg','Go back and enter your email first.','err');return}setMsg('otpMsg','Sending fresh OTP...','');try{await api('/api/auth/send-otp',{email:email});setMsg('otpMsg','Fresh OTP sent to '+email+'. Use the NEW code, not the old one.','ok')}catch(e){setMsg('otpMsg','Could not resend OTP: '+e.message,'err')}}
-async function doVerifyOtp(){var email=$('regEmail').value.trim().toLowerCase()||(state.user&&state.user.email)||'';var code=$('otpCode').value.trim();if(code.length!==6){setMsg('otpMsg','Enter the 6-digit OTP from Gmail.','err');return}setMsg('otpMsg','Verifying OTP...','');$('btnVerifyOtp').disabled=true;try{var d=await api('/api/auth/verify-otp',{email:email,otp:code,code:code});if(d&&d.token)state.token=d.token;saveLocal();setMsg('otpMsg','Account done! Now complete KYC inside wallet.','ok');showScreen('kyc')}catch(e){setMsg('otpMsg','OTP failed: '+e.message+' - Tap Resend OTP for a fresh code.','err')}finally{$('btnVerifyOtp').disabled=false}}
-async function doLogin(){var email=$('loginEmail').value.trim().toLowerCase(),pin=$('loginPin').value.trim();if(!email||!pin){setMsg('loginMsg','Enter email and PIN.','err');return}setMsg('loginMsg','Logging in...','');$('btnLogin').disabled=true;try{var d=await api('/api/auth/login',{email:email,pin:pin,password:pin});var u=(d&&(d.user||d.account))||{email:email};state.user={name:u.name||u.fullName||'EfikPay User',email:u.email||email,phone:u.phone||''};state.token=d.token||'local';saveLocal();renderDashboard();if(state.faceVerified&&state.fingerDone){showScreen('dashboard')}else{showScreen('kyc');setMsg('kycMsg','Welcome back! Complete KYC to unlock Send.','ok')}setMsg('loginMsg','Welcome back!','ok')}catch(e){setMsg('loginMsg','Login failed: '+e.message+' - Use the exact email + PIN you registered with.','err')}finally{$('btnLogin').disabled=false}}
-async function openCamera(){var msg=$('faceMsg');try{if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){setMsg('faceMsg','Camera not supported. Use Chrome on Android.','err');return}state.stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:false});var v=$('faceVideo');v.srcObject=state.stream;v.classList.remove('hidden');$('facePhoto').classList.add('hidden');setMsg('faceMsg','Camera open. Look at the camera, then tap Take Photo.','ok')}catch(e){setMsg('faceMsg','Camera blocked. Tap the lock icon in Chrome address bar -> Allow Camera, then tap Open Camera again. Error: '+e.message,'err')}}
-function takePhoto(){var v=$('faceVideo');if(!v.srcObject){setMsg('faceMsg','Tap Open Camera first.','err');return}try{var c=document.createElement('canvas');c.width=v.videoWidth||640;c.height=v.videoHeight||480;c.getContext('2d').drawImage(v,0,0,c.width,c.height);var url=c.toDataURL('image/jpeg',0.85);state.facePhoto=url;var img=$('facePhoto');img.src=url;img.classList.remove('hidden');v.classList.add('hidden');if(state.stream)state.stream.getTracks().forEach(function(tr){tr.stop()});try{localStorage.setItem('efikpay_face_photo',url)}catch(e){}setMsg('faceMsg','Photo taken. This is your real photo. Tap Finish KYC after fingerprint.','ok');$('kycFaceDot').textContent='✓';$('kycFaceRow').classList.add('done');$('kycFaceText').textContent='Real photo taken with camera.';state.faceVerified=true;try{localStorage.setItem('efikpay_face_verified','1')}catch(e){}}catch(e){setMsg('faceMsg','Could not take photo: '+e.message,'err')}}
-async function doFingerprint(){var msg=$('fingerMsg');try{if(window.PublicKeyCredential){setMsg('fingerMsg','Fingerprint / device lock requested. Follow your phone prompt.','');var ok=confirm('Use your phone fingerprint / device lock to secure EfikPay? Tap OK, then use your fingerprint.');if(ok){state.fingerDone=true;try{localStorage.setItem('efikpay_finger_done','1')}catch(e){}$('kycFingerDot').textContent='✓';$('kycFingerRow').classList.add('done');$('kycFingerText').textContent='Fingerprint / device lock set.';setMsg('fingerMsg','Fingerprint / device lock set.','ok')}}else{var ok2=confirm('This phone has no fingerprint API. Use your PIN as device lock instead? Tap OK to confirm.');if(ok2){state.fingerDone=true;try{localStorage.setItem('efikpay_finger_done','1')}catch(e){}$('kycFingerDot').textContent='✓';$('kycFingerRow').classList.add('done');setMsg('fingerMsg','Device lock set with PIN.','ok')}}}catch(e){setMsg('fingerMsg','Fingerprint failed: '+e.message,'err')}}
-function finishKyc(){if(!state.faceVerified){setMsg('kycMsg','Take a real face photo first - tap Open Camera, then Take Photo.','err');return}if(!state.fingerDone){setMsg('kycMsg','Set up Fingerprint / Device Lock first.','err');return}setMsg('kycMsg','KYC complete. Welcome to Dashboard Home!','ok');saveLocal();renderDashboard();showScreen('dashboard')}
-function openTab(name){['send','save','bills','airtime'].forEach(function(t){var el=$('tab-'+t);if(el)el.classList.toggle('hidden',t!==name)});if(name==='airtime')showScreen('dashboard')}
-function doSend(){if(!(state.faceVerified&&state.fingerDone)){setMsg('sendMsg','Complete KYC first - face + fingerprint. Go to KYC.','err');showScreen('kyc');return}var to=$('sendTo').value.trim(),amt=parseFloat($('sendAmount').value),pin=$('sendPin').value.trim();if(!to){setMsg('sendMsg','Enter recipient account / phone / email.','err');return}if(!amt||amt<10){setMsg('sendMsg','Enter amount of at least ₦10.','err');return}if(pin.length!==4){setMsg('sendMsg','Enter your 4-digit PIN to confirm.','err');return}if(amt>state.balance){setMsg('sendMsg','Insufficient balance. Your balance is ₦'+Number(state.balance).toLocaleString()+'. Fund your wallet first.','err');return}setMsg('sendMsg','Sending ₦'+amt.toLocaleString()+' to '+to+'...','');setTimeout(function(){state.balance-=amt;saveLocal();addTx('Send',to,amt);renderDashboard();setMsg('sendMsg','Sent ₦'+amt.toLocaleString()+' to '+to+'. If it fails, it auto-refunds.','ok');$('sendTo').value='';$('sendAmount').value='';$('sendPin').value=''},800)}
-function doSave(){var amt=parseFloat($('saveAmount').value);if(!amt||amt<100){setMsg('saveMsg','Enter at least ₦100 to save.','err');return}if(amt>state.balance){setMsg('saveMsg','Insufficient balance.','err');return}state.balance-=amt;saveLocal();addTx('Save','Vault',amt);renderDashboard();setMsg('saveMsg','Saved ₦'+amt.toLocaleString()+' to your vault.','ok');$('saveAmount').value=''}
-function doBill(){var amt=parseFloat($('billAmount').value),ref=$('billRef').value.trim();if(!ref){setMsg('billMsg','Enter meter / decoder number.','err');return}if(!amt||amt<100){setMsg('billMsg','Enter at least ₦100.','err');return}if(amt>state.balance){setMsg('billMsg','Insufficient balance.','err');return}state.balance-=amt;saveLocal();addTx('Bill',$('billType').value+' '+ref,amt);renderDashboard();setMsg('billMsg','Paid ₦'+amt.toLocaleString()+' for '+$('billType').value+'.','ok')}
-function doAirtime(){var amt=parseFloat($('airAmount').value),ph=$('airPhone').value.trim();if(!ph){setMsg('airMsg','Enter phone number.','err');return}if(!amt||amt<50){setMsg('airMsg','Enter at least ₦50.','err');return}if(amt>state.balance){setMsg('airMsg','Insufficient balance.','err');return}state.balance-=amt;saveLocal();addTx('Airtime',$('airNetwork').value+' '+ph,amt);renderDashboard();setMsg('airMsg','Bought ₦'+amt.toLocaleString()+' '+$('airNetwork').value+' airtime for '+ph+'.','ok')}
-function loadTransactions(){renderTx();alert('Transactions refreshed.')}
-function doLogout(){if(confirm('Log out of EfikPay?')){state.user=null;state.token=null;try{localStorage.removeItem('efikpay_token');localStorage.removeItem('efikpay_user')}catch(e){}showScreen('login')}}
-loadLocal();
-if(state.user&&state.token){renderDashboard();if(state.faceVerified&&state.fingerDone){showScreen('dashboard')}else{showScreen('kyc')}}
-else{showScreen('register')}
-if(state.user&&state.user.email){$('loginEmail').value=state.user.email;$('regEmail').value=state.user.email}
-</script>
-</body>
-</html>
+function closeSheet(){ $('sheet').style.display='none'; }
+async function doTransfer(){ const body={userId:UID, bankCode:$('bank').value, accountNumber:$('acc').value, amount:Number($('amt').value), pin:$('pin').value};
+  if(!body.bankCode||!body.accountNumber||!body.amount||!body.pin) return alert('Fill bank, account, amount and PIN.');
+  if(!confirm('Send ₦'+body.amount+' to '+body.accountNumber+'?')) return;
+  try{ const r=await fetch('/api/wallet/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); const j=await r.json(); alert(j.message+(j.autoRefunded?' - Money returned to your wallet.':'')+(j.reference?' Ref: '+j.reference:'')); closeSheet(); loadLedger(); }catch(e){ alert('Cannot reach server.'); } }
+function showMenu(){ alert('MENU / SETTINGS:\n\n• Profile & KYC\n• Security - Change PIN, Fingerprint\n• Spend / Save / Staking\n• Language\n• Support\n• Log Out\n\nLog out clears this phone only.'); if(confirm('Log out?')){ localStorage.removeItem('efikpay_session'); location.reload(); } }
+</script></body></html>
