@@ -284,6 +284,7 @@ function takeFacePhoto(){
       if(confirm('Is this your face? Tap OK to confirm Face Verification.')) {
         if(msg) msg.textContent='✅ Face Verified - real photo taken with camera.';
         alert('✅ Face Verified. Real photo taken with camera.');
+        try{ showDashboardHome(); setTimeout(function(){ location.reload(); }, 600); }catch(e){}
         // Mark KYC step done - go to next step (fingerprint / dashboard)
         var skipBtn = document.querySelector('button'); // no-op
         try{ localStorage.setItem('efikpay_face_verified','1'); }catch(e){}
@@ -295,4 +296,63 @@ function takeFacePhoto(){
 
 // Override fake face verify (if it existed) to open real camera instead
 try{ window.doFaceVerify = openFaceCamera; window.faceVerify = openFaceCamera; window.verifyFace = openFaceCamera; }catch(e){}
+
+// After Face Verified -> go to Dashboard Home
+function showDashboardHome(){
+  try{
+    // Hide any Face Verification card: find element containing "Face Verification" heading
+    var heads = document.querySelectorAll('h1,h2,h3,div');
+    for(var i=0;i<heads.length;i++){
+      if(heads[i].textContent && heads[i].textContent.trim()==='Face Verification'){
+        var card = heads[i].closest('div');
+        // Walk up 2-3 levels to the card container
+        for(var k=0;k<3 && card;k++){ if(card.parentElement) card = card.parentElement; }
+        if(card) card.style.display='none';
+        break;
+      }
+    }
+    // Also hide otpBox / face box if still visible
+    var fb = document.getElementById('otpBox'); if(fb) fb.style.display='none';
+    // Show dashboard: try common dashboard IDs, else scroll to Home nav and reload to dashboard view
+    var dash = document.getElementById('dashboard') || document.getElementById('homePage') || document.getElementById('home') || document.getElementById('mainDashboard');
+    if(dash) dash.style.display='block';
+    // Mark verified + go home
+    try{ localStorage.setItem('efikpay_face_verified','1'); }catch(e){}
+    window.scrollTo(0,0);
+    var msg = document.getElementById('faceMsg'); if(msg) msg.textContent='✅ Face Verified - going to Dashboard Home...';
+  }catch(e){}
+}
+// Override Start Face Scan button: if already verified, go to Dashboard, else open camera
+document.addEventListener('click', function(e){
+  var btn = e.target.closest('button');
+  if(!btn) return;
+  var txt = (btn.textContent||'').trim();
+  if(txt.indexOf('Start Face Scan')!==-1){
+    var verified = false;
+    try{ verified = localStorage.getItem('efikpay_face_verified')==='1'; }catch(_){}
+    var msgEl = document.getElementById('faceMsg');
+    var hasPhoto = false;
+    try{ var ph=document.getElementById('facePhoto'); hasPhoto = ph && ph.style.display!=='none' && ph.src && ph.src.length>100; }catch(_){}
+    if(verified || hasPhoto){
+      // Already have real photo -> go to Dashboard Home
+      showDashboardHome();
+      // Also try to trigger Home nav if app uses it
+      var homeNav = null;
+      var navs = document.querySelectorAll('button, a, div');
+      for(var i=0;i<navs.length;i++){ if((navs[i].textContent||'').trim()==='Home'){ homeNav=navs[i]; break; } }
+      if(homeNav){ try{ homeNav.click(); }catch(_){} }
+      setTimeout(function(){ alert('Welcome to EfikPay Dashboard Home! Your account is ready.'); location.reload(); }, 400);
+    } else {
+      // Not verified yet -> open real camera
+      if(typeof openFaceCamera==='function') openFaceCamera();
+      else alert('Tap Open Camera first, take your photo, then tap Start Face Scan again.');
+    }
+  }
+  // Skip button should also go to Dashboard Home (face required later before sending)
+  if(txt.indexOf('Skip for now')!==-1){
+    try{ localStorage.setItem('efikpay_face_skipped','1'); }catch(_){}
+    showDashboardHome();
+    setTimeout(function(){ location.reload(); }, 300);
+  }
+});
 </script></body></html>
