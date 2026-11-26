@@ -1,146 +1,223 @@
-// EfikPay - COMPLETE Auth - v11000 - ONCE AND FOR ALL
-// This ONE file monitors ALL user credentials: name, email, phone, password/PIN, login, register, OTP, forgot password.
-// Do NOT delete this file. All buttons depend on it.
-// Security: Password/PIN hashed with scrypt + salt. BVN never stored here. OTP hashed, 5 min expiry. No plain secrets in response.
+// EfikPay authRoutes.js — COMPLETE v11000 — EMAIL OTP (Termii Email, VERIFIED)
+// Flow: Register -> Email OTP -> KYC/BVN inside wallet -> CBN NUBAN
+// SMS is DISABLED for Nigeria until CAC Certificate approves Sender ID.
+// Email OTP uses TERMII_EMAIL_CONFIG_ID from Render Environment.
+// DO NOT paste TERMII_API_KEY in chat or GitHub. Only in Render Environment.
+
 const express = require('express');
-const crypto = require('crypto');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const router = express.Router();
 
-// Store: phone -> user { id, name, email, phone, passHash, salt, pinHash, pinSalt, verified, kycDone, createdAt, lastLogin, failedLogins, lockedUntil, resetOtpHash, resetExpires }
-const users = new Map();
-// Store: session token -> phone
-const sessions = new Map();
+// --- In-memory store (Render uses this; replace with Postgres in production) ---
+const users = new Map(); // key: email lowercased
+const otps = new Map();  // key: email -> { code, expiresAt, attempts, purpose }
+const JWT_SECRET = process.env.JWT_SECRET || 'efikpay-dev-secret-change-in-render';
+const TERMII_API_KEY = process.env.TERMII_API_KEY || '';
+const TERMII_EMAIL_CONFIG_ID = process.env.TERMII_EMAIL_CONFIG_ID || '';
 
-function cleanPhone(p){ let s=String(p||'').replace(/[^0-9+]/g,''); if(s.startsWith('0')) s='+234'+s.slice(1); if(/^\d{10}$/.test(s)) s='+234'+s; return s; }
-function hashPass(pass, salt){ return crypto.scryptSync(String(pass), salt, 64).toString('hex'); }
-function newSalt(){ return crypto.randomBytes(16).toString('hex'); }
-function newId(){ return 'EFK'+Date.now().toString(36).toUpperCase()+crypto.randomBytes(3).toString('hex').toUpperCase(); }
-function newToken(){ return crypto.randomBytes(32).toString('hex'); }
-function hashOtp(o){ return crypto.createHash('sha256').update(String(o)).digest('hex'); }
-function publicUser(u){ return { id:u.id, name:u.name, email:u.email, phone:u.phone, verified:u.verified, kycDone:u.kycDone||false, createdAt:u.createdAt }; }
-
-async function sendSmsViaTermii(to, message){
-  const apiKey = process.env.TERMII_API_KEY;
-  const sender = process.env.TERMII_SENDER || 'EfikPay';
-  if(!apiKey){ console.error('[EfikPay] TERMII_API_KEY missing - cannot send SMS'); return {ok:false,error:'TERMII_API_KEY missing'}; }
-  try{
-    const res = await fetch('https://api.ng.termii.com/api/sms/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to,from:sender,sms:message,type:'plain',channel:'generic',api_key:apiKey})});
-    const data = await res.json().catch(()=>({}));
-    console.log('[EfikPay] Termii:',res.status,JSON.stringify(data).slice(0,200));
-    return res.ok ? {ok:true,data} : {ok:false,error:data.message||('Termii '+res.status)};
-  }catch(e){ console.error('[EfikPay] Termii error',e.message); return {ok:false,error:e.message}; }
+function normEmail(e){ return String(e||'').trim().toLowerCase(); }
+function normPhone(p){ return String(p||'').trim().replace(/[\s-]/g,''); }
+function makeCode(){ return String(Math.floor(100000 + Math.random()*900000)); }
+function signToken(user){
+  return jwt.sign({ id: user.id, email: user.email, phone: user.phone }, JWT_SECRET, { expiresIn: '7d' });
+}
+function publicUser(u){
+  if(!u) return null;
+  return { id: u.id, fullName: u.fullName, email: u.email, phone: u.phone, isVerified: !!u.isVerified, kycDone: !!u.kycDone, accountNumber: u.accountNumber || null, accountName: u.accountName || null, createdAt: u.createdAt };
 }
 
-// ---- 1. REGISTER: Name + Email + Phone + Password/PIN ----
-router.post('/register', (req,res)=>{
-  const name=String(req.body.name||'').trim();
-  const email=String(req.body.email||'').trim().toLowerCase();
-  const phone=cleanPhone(req.body.phone);
-  const password=String(req.body.password||req.body.pin||'');
-  if(!name||name.length<3) return res.status(400).json({ok:false,message:'Enter full name as on BVN / ID'});
-  if(!email||!email.includes('@')) return res.status(400).json({ok:false,message:'Enter valid email'});
-  if(!phone||phone.length<10) return res.status(400).json({ok:false,message:'Enter valid phone'});
-  if(!password||password.length<4) return res.status(400).json({ok:false,message:'Create PIN / Password of at least 4 characters'});
-  if(users.has(phone)) return res.status(409).json({ok:false,message:'This phone already has an EfikPay account. Tap Login instead.'});
-  const salt=newSalt();
-  const user={id:newId(),name,email,phone,passHash:hashPass(password,salt),salt,pinHash:hashPass(password,salt),pinSalt:salt,verified:false,kycDone:false,createdAt:new Date().toISOString(),lastLogin:null,failedLogins:0,lockedUntil:0,otpHash:null,otpExpires:0,otpAttempts:0,resetOtpHash:null,resetExpires:0};
-  users.set(phone,user);
-  return res.json({ok:true,message:'Account created. Now verify OTP.',user:publicUser(user)});
+// --- Termii EMAIL OTP ---
+async function sendEmailOtp(email, purpose){
+  const code = makeCode();
+  otps.set(normEmail(email), { code, expiresAt: Date.now() + 10*60*1000, attempts: 0, purpose });
+  if(!TERMII_API_KEY){
+    console.error('[auth] TERMII_API_KEY missing in Render Environment');
+    return { ok: false, error: 'TERMII_API_KEY missing in Render Environment' };
+  }
+  if(!TERMII_EMAIL_CONFIG_ID){
+    console.error('[auth] TERMII_EMAIL_CONFIG_ID missing in Render Environment');
+    return { ok: false, error: 'TERMII_EMAIL_CONFIG_ID missing in Render Environment' };
+  }
+  try{
+    const res = await fetch('https://api.ng.termii.com/api/v1/email/otp/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        api_key: TERMII_API_KEY,
+        email_address: normEmail(email),
+        code: code,
+        email_configuration_id: TERMII_EMAIL_CONFIG_ID
+      })
+    });
+    const data = await res.json().catch(()=>({}));
+    console.log('[auth] Termii Email OTP send:', res.status, JSON.stringify(data).slice(0,500));
+    if(!res.ok){
+      return { ok: false, error: (data && (data.message || data.error)) || ('Termii Email failed: '+res.status) };
+    }
+    return { ok: true, message: 'OTP sent to your email' };
+  }catch(e){
+    console.error('[auth] Email OTP error:', e.message);
+    return { ok: false, error: 'Could not send OTP. Check TERMII_API_KEY in Render.' };
+  }
+}
+
+function verifyOtpCode(email, code){
+  const rec = otps.get(normEmail(email));
+  if(!rec) return { ok: false, error: 'No OTP found. Tap Resend OTP.' };
+  if(Date.now() > rec.expiresAt){ otps.delete(normEmail(email)); return { ok: false, error: 'OTP expired. Tap Resend OTP.' }; }
+  if(String(code).trim() !== String(rec.code).trim()){
+    rec.attempts += 1;
+    if(rec.attempts >= 5){ otps.delete(normEmail(email)); return { ok: false, error: 'Too many wrong attempts. Tap Resend OTP.' }; }
+    return { ok: false, error: 'Wrong OTP code. Check your email.' };
+  }
+  otps.delete(normEmail(email));
+  return { ok: true };
+}
+
+// 1) REGISTER
+router.post('/register', async (req, res)=>{
+  try{
+    const { fullName, email, phone, pin, terms } = req.body || {};
+    if(!fullName || !email || !phone || !pin) return res.status(400).json({ success:false, message:'Fill full name, email, phone and PIN.' });
+    if(!terms) return res.status(400).json({ success:false, message:'Tick Terms to continue.' });
+    if(String(pin).length < 4) return res.status(400).json({ success:false, message:'PIN must be at least 4 digits.' });
+    const em = normEmail(email);
+    if(users.has(em)) return res.status(400).json({ success:false, message:'This email is already registered. Tap Login.' });
+    const pinHash = await bcrypt.hash(String(pin), 10);
+    const user = { id: 'user_'+Date.now(), fullName: String(fullName).trim(), email: em, phone: normPhone(phone), pinHash, isVerified:false, kycDone:false, accountNumber:null, accountName:null, createdAt: new Date().toISOString() };
+    users.set(em, user);
+    const sent = await sendEmailOtp(em, 'register');
+    if(!sent.ok) return res.status(500).json({ success:false, message:'OTP NOT sent: '+sent.error });
+    return res.json({ success:true, message:'OTP sent to your email. Check Gmail for EfikPay code.', email: em });
+  }catch(e){ console.error(e); return res.status(500).json({ success:false, message:'Register failed. Try again.' }); }
 });
 
-// ---- 2. SEND OTP ----
-router.post('/send-otp', async (req,res)=>{
-  const phone=cleanPhone(req.body.phone);
-  const user=users.get(phone);
-  if(!user) return res.status(404).json({ok:false,message:'No account for this phone. Register first.'});
-  const otp=String(Math.floor(100000+Math.random()*900000));
-  user.otpHash=hashOtp(otp); user.otpExpires=Date.now()+5*60*1000; user.otpAttempts=0;
-  const sent=await sendSmsViaTermii(phone,`Your EfikPay OTP is ${otp}. Expires in 5 minutes. Never share it.`);
-  if(!sent.ok) return res.status(502).json({ok:false,message:'Could not send OTP. Check TERMII_API_KEY in Render.',detail:sent.error});
-  return res.json({ok:true,message:'OTP sent to '+phone});
+// 2) SEND-OTP (resend / login OTP)
+router.post('/send-otp', async (req, res)=>{
+  try{
+    const { email, purpose } = req.body || {};
+    if(!email) return res.status(400).json({ success:false, message:'Email is required.' });
+    const sent = await sendEmailOtp(email, purpose || 'login');
+    if(!sent.ok) return res.status(500).json({ success:false, message:'OTP NOT sent: '+sent.error });
+    return res.json({ success:true, message:'OTP sent to your email. Check Gmail.' });
+  }catch(e){ console.error(e); return res.status(500).json({ success:false, message:'Could not send OTP.' }); }
 });
 
-// ---- 3. VERIFY OTP ----
-router.post('/verify-otp', (req,res)=>{
-  const phone=cleanPhone(req.body.phone); const otp=String(req.body.otp||'').trim();
-  const user=users.get(phone); if(!user) return res.status(404).json({ok:false,message:'No account for this phone.'});
-  if(!user.otpHash) return res.status(400).json({ok:false,message:'Tap Resend OTP first.'});
-  if(Date.now()>user.otpExpires) return res.status(400).json({ok:false,message:'OTP expired. Tap Resend.'});
-  if(user.otpAttempts>=3) return res.status(429).json({ok:false,message:'Too many tries. Tap Resend.'});
-  user.otpAttempts+=1;
-  if(hashOtp(otp)!==user.otpHash) return res.status(400).json({ok:false,message:'Wrong OTP. Try again.'});
-  user.verified=true; user.otpHash=null;
-  const token=newToken(); sessions.set(token,phone);
-  return res.json({ok:true,message:'Phone verified',token,user:publicUser(user)});
+// 3) VERIFY-OTP
+router.post('/verify-otp', async (req, res)=>{
+  try{
+    const { email, code, otp } = req.body || {};
+    const c = code || otp;
+    if(!email || !c) return res.status(400).json({ success:false, message:'Email and OTP code are required.' });
+    const v = verifyOtpCode(email, c);
+    if(!v.ok) return res.status(400).json({ success:false, message: v.error });
+    const user = users.get(normEmail(email));
+    if(user) user.isVerified = true;
+    const token = user ? signToken(user) : jwt.sign({ email: normEmail(email) }, JWT_SECRET, { expiresIn:'7d' });
+    return res.json({ success:true, message:'Email verified. Welcome to EfikPay.', token, user: publicUser(user) });
+  }catch(e){ console.error(e); return res.status(500).json({ success:false, message:'Verify failed.' }); }
 });
 
-// ---- 4. LOGIN: Phone + Password/PIN ----
-router.post('/login', (req,res)=>{
-  const phone=cleanPhone(req.body.phone); const password=String(req.body.password||req.body.pin||'');
-  const user=users.get(phone); if(!user) return res.status(404).json({ok:false,message:'No account for this phone. Register first.'});
-  if(user.lockedUntil>Date.now()) return res.status(423).json({ok:false,message:'Account locked for 15 minutes after too many wrong tries. Try later or reset PIN.'});
-  if(hashPass(password,user.salt)!==user.passHash){ user.failedLogins+=1; if(user.failedLogins>=5){user.lockedUntil=Date.now()+15*60*1000; user.failedLogins=0; return res.status(423).json({ok:false,message:'Too many wrong tries. Account locked 15 minutes.'});} return res.status(401).json({ok:false,message:'Wrong phone or PIN / Password.'}); }
-  if(!user.verified) return res.status(403).json({ok:false,message:'Verify OTP first. Tap Resend OTP.',needOtp:true});
-  user.failedLogins=0; user.lastLogin=new Date().toISOString();
-  const token=newToken(); sessions.set(token,phone);
-  return res.json({ok:true,message:'Login success',token,user:publicUser(user)});
+// 4) LOGIN (PIN)
+router.post('/login', async (req, res)=>{
+  try{
+    const { email, phone, pin, password } = req.body || {};
+    const em = normEmail(email || '');
+    let user = em ? users.get(em) : null;
+    if(!user && phone){ for(const u of users.values()){ if(u.phone === normPhone(phone)){ user = u; break; } } }
+    if(!user) return res.status(400).json({ success:false, message:'No account with this email/phone. Tap Register.' });
+    const pw = pin || password;
+    if(!pw) return res.status(400).json({ success:false, message:'Enter your PIN.' });
+    const ok = await bcrypt.compare(String(pw), user.pinHash);
+    if(!ok) return res.status(400).json({ success:false, message:'Wrong PIN.' });
+    if(!user.isVerified){
+      const sent = await sendEmailOtp(user.email, 'login');
+      return res.json({ success:false, needOtp:true, message:'Verify your email first. OTP sent to your email.', email: user.email, otpSent: sent.ok });
+    }
+    return res.json({ success:true, message:'Login successful.', token: signToken(user), user: publicUser(user) });
+  }catch(e){ console.error(e); return res.status(500).json({ success:false, message:'Login failed.' }); }
 });
 
-// ---- 5. FORGOT PIN / PASSWORD: Send Reset OTP ----
-router.post('/forgot-password', async (req,res)=>{
-  const phone=cleanPhone(req.body.phone); const user=users.get(phone);
-  if(!user) return res.status(404).json({ok:false,message:'No account for this phone.'});
-  const otp=String(Math.floor(100000+Math.random()*900000));
-  user.resetOtpHash=hashOtp(otp); user.resetExpires=Date.now()+10*60*1000;
-  const sent=await sendSmsViaTermii(phone,`Your EfikPay reset OTP is ${otp}. Expires in 10 minutes. If you did not ask for this, ignore it.`);
-  if(!sent.ok) return res.status(502).json({ok:false,message:'Could not send reset OTP. Check TERMII_API_KEY.'});
-  return res.json({ok:true,message:'Reset OTP sent to '+phone});
+// 5) FORGOT-PIN (send OTP to email)
+router.post('/forgot-pin', async (req, res)=>{
+  try{
+    const { email } = req.body || {};
+    if(!email) return res.status(400).json({ success:false, message:'Email is required.' });
+    const user = users.get(normEmail(email));
+    if(!user) return res.status(400).json({ success:false, message:'No account with this email.' });
+    const sent = await sendEmailOtp(email, 'forgot-pin');
+    if(!sent.ok) return res.status(500).json({ success:false, message:'OTP NOT sent: '+sent.error });
+    return res.json({ success:true, message:'OTP sent to your email to reset PIN.' });
+  }catch(e){ console.error(e); return res.status(500).json({ success:false, message:'Forgot PIN failed.' }); }
 });
 
-// ---- 6. RESET PIN / PASSWORD with OTP ----
-router.post('/reset-password', (req,res)=>{
-  const phone=cleanPhone(req.body.phone); const otp=String(req.body.otp||''); const np=String(req.body.newPassword||req.body.newPin||'');
-  const user=users.get(phone); if(!user) return res.status(404).json({ok:false,message:'No account.'});
-  if(!user.resetOtpHash||Date.now()>user.resetExpires) return res.status(400).json({ok:false,message:'Reset OTP expired. Tap Forgot again.'});
-  if(hashOtp(otp)!==user.resetOtpHash) return res.status(400).json({ok:false,message:'Wrong reset OTP.'});
-  if(!np||np.length<4) return res.status(400).json({ok:false,message:'New PIN must be at least 4 characters.'});
-  const salt=newSalt(); user.passHash=hashPass(np,salt); user.salt=salt; user.pinHash=user.passHash; user.pinSalt=salt; user.resetOtpHash=null; user.failedLogins=0; user.lockedUntil=0;
-  return res.json({ok:true,message:'PIN / Password reset success. Login with new PIN.'});
+// 6) RESET-PIN (with OTP)
+router.post('/reset-pin', async (req, res)=>{
+  try{
+    const { email, code, otp, newPin } = req.body || {};
+    const c = code || otp;
+    if(!email || !c || !newPin) return res.status(400).json({ success:false, message:'Email, OTP and new PIN are required.' });
+    const v = verifyOtpCode(email, c);
+    if(!v.ok) return res.status(400).json({ success:false, message: v.error });
+    const user = users.get(normEmail(email));
+    if(!user) return res.status(400).json({ success:false, message:'No account with this email.' });
+    user.pinHash = await bcrypt.hash(String(newPin), 10);
+    return res.json({ success:true, message:'PIN reset successful. Login with new PIN.' });
+  }catch(e){ console.error(e); return res.status(500).json({ success:false, message:'Reset PIN failed.' }); }
 });
 
-// ---- 7. CHANGE PIN (logged in) ----
-router.post('/change-pin', (req,res)=>{
-  const token=String(req.headers.authorization||'').replace('Bearer ','');
-  const phone=sessions.get(token) || cleanPhone(req.body.phone);
-  const user=users.get(phone); if(!user) return res.status(401).json({ok:false,message:'Login first.'});
-  const oldP=String(req.body.oldPassword||req.body.oldPin||''); const np=String(req.body.newPassword||req.body.newPin||'');
-  if(hashPass(oldP,user.salt)!==user.passHash) return res.status(401).json({ok:false,message:'Old PIN is wrong.'});
-  if(!np||np.length<4) return res.status(400).json({ok:false,message:'New PIN must be at least 4.'});
-  const salt=newSalt(); user.passHash=hashPass(np,salt); user.salt=salt; user.pinHash=user.passHash; user.pinSalt=salt;
-  return res.json({ok:true,message:'PIN changed.'});
+// 7) CHANGE-PIN (needs old PIN)
+router.post('/change-pin', async (req, res)=>{
+  try{
+    const auth = req.headers.authorization || '';
+    const token = auth.startsWith('Bearer ') ? auth.slice(7) : null;
+    if(!token) return res.status(401).json({ success:false, message:'Login first.' });
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const user = users.get(normEmail(decoded.email));
+    if(!user) return res.status(404).json({ success:false, message:'Account not found.' });
+    const { oldPin, newPin } = req.body || {};
+    if(!oldPin || !newPin) return res.status(400).json({ success:false, message:'Old PIN and new PIN are required.' });
+    const ok = await bcrypt.compare(String(oldPin), user.pinHash);
+    if(!ok) return res.status(400).json({ success:false, message:'Old PIN is wrong.' });
+    user.pinHash = await bcrypt.hash(String(newPin), 10);
+    return res.json({ success:true, message:'PIN changed successfully.' });
+  }catch(e){ console.error(e); return res.status(401).json({ success:false, message:'Session expired. Login again.' }); }
 });
 
-// ---- 8. ME: Get my profile (for new phone recovery) ----
-router.get('/me', (req,res)=>{
-  const token=String(req.headers.authorization||'').replace('Bearer ','');
-  const phone=sessions.get(token); if(!phone) return res.status(401).json({ok:false,message:'Not logged in.'});
-  const user=users.get(phone); if(!user) return res.status(404).json({ok:false,message:'Account not found.'});
-  return res.json({ok:true,user:publicUser(user)});
+// 8) ME
+router.post('/me', async (req, res)=>{
+  try{
+    const auth = req.headers.authorization || '';
+    const token = auth.startsWith('Bearer ') ? auth.slice(7) : null;
+    if(!token) return res.status(401).json({ success:false, message:'Login first.' });
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const user = users.get(normEmail(decoded.email));
+    if(!user) return res.status(404).json({ success:false, message:'Account not found.' });
+    return res.json({ success:true, user: publicUser(user) });
+  }catch(e){ return res.status(401).json({ success:false, message:'Session expired. Login again.' }); }
 });
 
-// ---- 9. LOGOUT ----
-router.post('/logout', (req,res)=>{
-  const token=String(req.headers.authorization||'').replace('Bearer ','');
-  sessions.delete(token);
-  return res.json({ok:true,message:'Logged out.'});
+// 9) KYC-DONE (inside wallet, after BVN + face + fingerprint)
+router.post('/kyc-done', async (req, res)=>{
+  try{
+    const auth = req.headers.authorization || '';
+    const token = auth.startsWith('Bearer ') ? auth.slice(7) : null;
+    if(!token) return res.status(401).json({ success:false, message:'Login first.' });
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const user = users.get(normEmail(decoded.email));
+    if(!user) return res.status(404).json({ success:false, message:'Account not found.' });
+    const { accountNumber, accountName } = req.body || {};
+    user.kycDone = true;
+    if(accountNumber) user.accountNumber = String(accountNumber);
+    if(accountName) user.accountName = String(accountName);
+    return res.json({ success:true, message:'KYC completed. Your NUBAN account is ready.', user: publicUser(user) });
+  }catch(e){ return res.status(401).json({ success:false, message:'Session expired. Login again.' }); }
 });
 
-// ---- 10. MARK KYC DONE (called after BVN + Face verified in Settings) ----
-router.post('/kyc-done', (req,res)=>{
-  const phone=cleanPhone(req.body.phone); const user=users.get(phone);
-  if(!user) return res.status(404).json({ok:false,message:'No account.'});
-  user.kycDone=true;
-  return res.json({ok:true,user:publicUser(user)});
+// 10) LOGOUT (client deletes token; server confirms)
+router.post('/logout', async (req, res)=>{
+  return res.json({ success:true, message:'Logged out. Delete token on phone.' });
 });
 
 module.exports = router;
