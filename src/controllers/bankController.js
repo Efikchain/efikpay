@@ -71,7 +71,7 @@ async function createVirtualAccount(req,res){
     if(!email||!fullName||!phone) return res.status(400).json({success:false,message:'Fill fullName, email, phone'});
     if(!bvn) return res.status(400).json({success:false,message:'Complete KYC with BVN first to get your real account number.'});
     const names=String(fullName).trim().split(' ');
-    const r=await flutterwave.post('/virtual-account-numbers',{email, tx_ref:'EFIK-'+Date.now(), firstname:names[0], lastname:names.slice(1).join(' ')||'EDET', phonenumber:phone, bvn, narration:'EfikPay Wallet', amount:1});
+    const r=await flutterwave.post('/virtual-account-numbers',{email, tx_ref:'EFIK-'+Date.now(), firstname:names[0], lastname:names.slice(1).join(' ')||'EDET', phonenumber:phone, bvn, narration:fullName, amount:1});
     const d=(r.data&&r.data.data)||r.data;
     if(!d||!d.account_number) return res.status(400).json({success:false,message:'Could not create account number'});
     return res.json({success:true, account_number:d.account_number, bank_name:'Flutterwave/EfikPay', real_bank_name:d.bank_name, account_name:fullName});
